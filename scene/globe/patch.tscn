@@ -1,8 +1,15 @@
 [gd_scene format=3 uid="uid://tonp4lxkn5xu"]
 
+[ext_resource type="Texture2D" uid="uid://dk4yy8ym1ev0" path="res://texture/earth-1k.jpg" id="1_yml65"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yml65"]
+albedo_texture = ExtResource("1_yml65")
+
 [sub_resource type="QuadMesh" id="QuadMesh_2senw"]
+material = SubResource("StandardMaterial3D_yml65")
 subdivide_width = 32
 subdivide_depth = 32
+center_offset = Vector3(0, 0, 0.5)
 
 [node name="Face" type="MeshInstance3D" unique_id=1018368537]
 mesh = SubResource("QuadMesh_2senw")

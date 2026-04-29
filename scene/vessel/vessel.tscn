@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://bmmwajbmxcv1r"]
+
+[ext_resource type="PackedScene" uid="uid://db62r5fvslwta" path="res://model/craft_speederA.glb" id="1_q8vs0"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_e8jdq"]
+size = Vector3(1.1817899177358413, 1, 2.066691590625851)
+
+[node name="Vessel" type="RigidBody3D" unique_id=379542788]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=530175868]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.09089497, 0, -0.11307219)
+shape = SubResource("BoxShape3D_e8jdq")
+
+[node name="craft_speederA2" parent="CollisionShape3D" unique_id=1376036466 instance=ExtResource("1_q8vs0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.3000000000029104, -1.5)
