@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://1lxuuxy2kydt"]
+
+[ext_resource type="Script" uid="uid://xaji04qmoapr" path="res://scene/globe/globe.gd" id="1_sy1xu"]
+[ext_resource type="PackedScene" uid="uid://tonp4lxkn5xu" path="res://scene/globe/patch.tscn" id="2_npu62"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_2senw"]
+subdivide_width = 32
+subdivide_depth = 32
+
+[node name="Globe" type="Node3D" unique_id=1410850832]
+script = ExtResource("1_sy1xu")
+patch = ExtResource("2_npu62")
+
+[node name="Face2" parent="." unique_id=1018368537 instance=ExtResource("2_npu62")]
+mesh = SubResource("QuadMesh_2senw")
+
+[node name="@MeshInstance3D@50471" parent="." unique_id=95014494 instance=ExtResource("2_npu62")]
+transform = Transform3D(6.123233995736766e-17, 0, 1, 0, 1, 0, -1, 0, 6.123233995736766e-17, 0, 0, 0)
+_big_space/cell_local_transform = Transform3D(6.123233995736766e-17, 0, 1, 0, 1, 0, -1, 0, 6.123233995736766e-17, 0, 0, 0)
+_big_space/cell_size_override_enabled = true
+mesh = SubResource("QuadMesh_2senw")
+
+[node name="@MeshInstance3D@50472" parent="." unique_id=1951276393 instance=ExtResource("2_npu62")]
+transform = Transform3D(1, 0, 0, 0, 6.123233995736766e-17, 1, 0, -1, 6.123233995736766e-17, 0, 0, 0)
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 6.123233995736766e-17, 1, 0, -1, 6.123233995736766e-17, 0, 0, 0)
+_big_space/cell_size_override_enabled = true
+mesh = SubResource("QuadMesh_2senw")
+
+[node name="@MeshInstance3D@50473" parent="." unique_id=1363127133 instance=ExtResource("2_npu62")]
+transform = Transform3D(-1, 0, 1.2246467991473532e-16, 0, 1, 0, -1.2246467991473532e-16, 0, -1, 0, 0, 0)
+_big_space/cell_local_transform = Transform3D(-1, 0, 1.2246467991473532e-16, 0, 1, 0, -1.2246467991473532e-16, 0, -1, 0, 0, 0)
+_big_space/cell_size_override_enabled = true
+mesh = SubResource("QuadMesh_2senw")
+
+[node name="@MeshInstance3D@50474" parent="." unique_id=1898576313 instance=ExtResource("2_npu62")]
+transform = Transform3D(6.123233995736766e-17, 0, -1, 0, 1, 0, 1, 0, 6.123233995736766e-17, 0, 0, 0)
+_big_space/cell_local_transform = Transform3D(6.123233995736766e-17, 0, -1, 0, 1, 0, 1, 0, 6.123233995736766e-17, 0, 0, 0)
+_big_space/cell_size_override_enabled = true
+mesh = SubResource("QuadMesh_2senw")
+
+[node name="@MeshInstance3D@50475" parent="." unique_id=119235568 instance=ExtResource("2_npu62")]
+transform = Transform3D(1, 0, 0, 0, 6.123233995736766e-17, -1, 0, 1, 6.123233995736766e-17, 0, 0, 0)
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 6.123233995736766e-17, -1, 0, 1, 6.123233995736766e-17, 0, 0, 0)
+_big_space/cell_size_override_enabled = true
+mesh = SubResource("QuadMesh_2senw")

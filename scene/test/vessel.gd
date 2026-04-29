@@ -13,17 +13,17 @@ func _process(delta: float) -> void:
 	if Input.is_action_pressed("throttle"):
 		thrust_input.z = 1
 	if Input.is_action_pressed("roll_right"):
-		rotation_input.z = -1
+		rotation_input.y = -1
 	if Input.is_action_pressed("roll_left"):
-		rotation_input.z = 1
+		rotation_input.y = 1
 	if Input.is_action_pressed("pitch_up"):
 		rotation_input.x = -1
 	if Input.is_action_pressed("pitch_down"):
 		rotation_input.x = 1
 	if Input.is_action_pressed("yaw_right"):
-		rotation_input.y = -1
+		rotation_input.z = -1
 	if Input.is_action_pressed("yaw_left"):
-		rotation_input.y = 1
+		rotation_input.z = 1
 
 	# Move the vessel based on thrust input
 	var forward_direction = -transform.basis.z.normalized()
@@ -31,7 +31,7 @@ func _process(delta: float) -> void:
 	var up_direction = transform.basis.y.normalized()
 	
 	var movement = (forward_direction * thrust_input.z + right_direction * thrust_input.x + up_direction * thrust_input.y) * speed * delta
-	translate(movement)
+	global_translate(movement)
 	
 	# Rotate the vessel based on rotation input
 	var l_rotation = Vector3(rotation_input.x, rotation_input.y, rotation_input.z) * rotation_speed * delta

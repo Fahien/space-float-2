@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dhi3qrjim6wug"]
 
-[ext_resource type="Script" uid="uid://dikwsc5cxaom" path="res://camera_orbit.gd" id="1_4sq6p"]
+[ext_resource type="Script" uid="uid://dikwsc5cxaom" path="res://scene/test/camera_orbit.gd" id="1_4sq6p"]
 
 [node name="CameraOrbitRoot" type="Node3D" unique_id=188560390]
 script = ExtResource("1_4sq6p")
@@ -16,4 +16,4 @@ margin = 1.0
 
 [node name="Camera3D" type="Camera3D" parent="YawPivot/PitchPivot/SpringArm3D" unique_id=1848053357]
 current = true
-far = 680000000.0
+far = 15000000000000.01

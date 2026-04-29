@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://dbliypb3g41l"]
+
+[ext_resource type="Script" uid="uid://bsb3gbwjjlj05" path="res://scene/test/vessel.gd" id="1_ppyta"]
+[ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="2_ppyta"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mf4mk"]
+albedo_color = Color(0, 1, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8uh7m"]
+material = SubResource("StandardMaterial3D_mf4mk")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_37kl0"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_8uh7m"]
+material = SubResource("StandardMaterial3D_37kl0")
+radius = 1.0
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8uh7m"]
+albedo_color = Color(0, 0, 1, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_6uqi0"]
+material = SubResource("StandardMaterial3D_8uh7m")
+
+[node name="Origin" type="BigSpaceRoot3D" unique_id=1368632920]
+floating_origin_path = NodePath("Z1/CameraOrbitRoot")
+
+[node name="Z1" type="Node3D" parent="." unique_id=1258513382]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12200000, 0)
+_big_space/cell_y = 6100
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6100000, 0)
+
+[node name="Vessel" type="MeshInstance3D" parent="Z1" unique_id=1906698312]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15.252541468945982)
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15.252541468945982)
+mesh = SubResource("BoxMesh_8uh7m")
+script = ExtResource("1_ppyta")
+speed = 10000000.0
+
+[node name="CameraOrbitRoot" parent="Z1" unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("2_ppyta")]
+target_follow_responsiveness = 10000.1
+target = NodePath("../Vessel")
+
+[node name="MoonOrigin" type="Node3D" parent="." unique_id=1801548224]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 768800000, 0, 0)
+_big_space/cell_x = 384400
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 384400000, 0, 0)
+
+[node name="Moon" type="MeshInstance3D" parent="MoonOrigin" unique_id=1220418950]
+transform = Transform3D(1724000, 0, 0, 0, 1724000, 0, 0, 0, 1724000, 0, 0, 0)
+_big_space/cell_local_transform = Transform3D(1724000, 0, 0, 0, 1724000, 0, 0, 0, 1724000, 0, 0, 0)
+mesh = SubResource("SphereMesh_8uh7m")
+
+[node name="EarthOrigin" type="Node3D" parent="." unique_id=1101218610]
+
+[node name="Earth" type="MeshInstance3D" parent="EarthOrigin" unique_id=962348979]
+transform = Transform3D(12000000, 0, 0, 0, 12000000, 0, 0, 0, 12000000, 0, 0, 0)
+_big_space/cell_local_transform = Transform3D(12000000, 0, 0, 0, 12000000, 0, 0, 0, 12000000, 0, 0, 0)
+mesh = SubResource("SphereMesh_6uqi0")

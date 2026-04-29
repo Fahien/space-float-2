@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://tonp4lxkn5xu"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_2senw"]
+subdivide_width = 32
+subdivide_depth = 32
+
+[node name="Face" type="MeshInstance3D" unique_id=1018368537]
+mesh = SubResource("QuadMesh_2senw")
