@@ -75,8 +75,8 @@ _big_space/cell_y = 6000
 _big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6000000, 0)
 
 [node name="Vessel" parent="Z1" unique_id=379542788 instance=ExtResource("2_mih6t")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
-_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.782398249953985, 0)
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.782398249953985, 0)
 
 [node name="Z2" type="Node3D" parent="." unique_id=389152539]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1537600000, 24000000, 0)

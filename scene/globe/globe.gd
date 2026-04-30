@@ -109,6 +109,7 @@ func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: floa
 	# Let's transform the vertices of the patch.
 	var vertices = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
 	var indices = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_INDEX]
+	var normals = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
 	var uvs = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_TEX_UV]
 
 	for i in range(uvs.size()):
@@ -144,15 +145,19 @@ func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: floa
 
 	var l_scale = Vector3.ONE / float(1)
 	l_basis = l_basis.scaled(l_scale)
-	instance.transform.basis = l_basis
+	#instance.transform.basis = l_basis
 
 	for i in range(vertices.size()):
-		uvs[i] = _direction_to_equirectangular_uv(instance.transform * vertices[i])
+		uvs[i] = _direction_to_equirectangular_uv(l_basis * vertices[i])
 
 	var arrays = instance.mesh.surface_get_arrays(0)
+
+	for i in range(vertices.size()):
+		normals[i] = vertices[i]
+		vertices[i].z -= 1.0
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_INDEX] = indices
-	arrays[Mesh.ARRAY_NORMAL] = vertices
+	arrays[Mesh.ARRAY_NORMAL] = normals
 	arrays[Mesh.ARRAY_TEX_UV] = uvs
 
 	var new_mesh = ArrayMesh.new()
@@ -164,9 +169,29 @@ func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: floa
 
 	instance.mesh = new_mesh
 
-	parent.add_child(instance)
+	# Create a static body for collision
+	var static_body = StaticBody3D.new()
+	instance.add_child(static_body)
+	var collision_shape = CollisionShape3D.new()
+	var shape = new_mesh.create_trimesh_shape()
+	collision_shape.shape = shape
+	static_body.add_child(collision_shape)
+
+	var rotation_node = Node3D.new()
+	rotation_node.position = Vector3(0.0, 0.0, 1.0)
+	rotation_node.add_child(instance)
+
+	var wrapper_node = Node3D.new()
+	wrapper_node.add_child(rotation_node)
+	wrapper_node.transform.basis = l_basis
+
+	parent.add_child(wrapper_node)
 	if Engine.is_editor_hint():
+		rotation_node.owner = get_tree().edited_scene_root
+		wrapper_node.owner = get_tree().edited_scene_root
 		instance.owner = get_tree().edited_scene_root
+		static_body.owner = get_tree().edited_scene_root
+		collision_shape.owner = get_tree().edited_scene_root
 
 
 func _direction_to_equirectangular_uv(direction: Vector3) -> Vector2:
