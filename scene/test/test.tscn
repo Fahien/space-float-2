@@ -1,8 +1,22 @@
 [gd_scene format=3 uid="uid://dbliypb3g41l"]
 
+[ext_resource type="Script" uid="uid://rcqopnr65qsb" path="res://scene/test/test.gd" id="1_dd6y4"]
 [ext_resource type="PackedScene" uid="uid://bmmwajbmxcv1r" path="res://scene/vessel/vessel.tscn" id="2_mih6t"]
 [ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="2_ppyta"]
 [ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="3_mih6t"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_mih6t"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_dd6y4"]
+sky_material = SubResource("ProceduralSkyMaterial_mih6t")
+
+[sub_resource type="Environment" id="Environment_auxoc"]
+background_mode = 2
+sky = SubResource("Sky_dd6y4")
+tonemap_mode = 2
+glow_enabled = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_37kl0"]
 albedo_color = Color(1, 0, 0, 1)
@@ -12,31 +26,93 @@ material = SubResource("StandardMaterial3D_37kl0")
 radius = 1.0
 height = 2.0
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_mih6t"]
+size = Vector3(100, 1, 100)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mih6t"]
+transparency = 1
+albedo_color = Color(0, 1, 0, 0.36078432)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_mih6t"]
+material = SubResource("StandardMaterial3D_mih6t")
+size = Vector2(50, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dd6y4"]
+size = Vector3(10, 0.5, 10)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_auxoc"]
+albedo_color = Color(1, 1, 0, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_m5u1r"]
+material = SubResource("StandardMaterial3D_auxoc")
+size = Vector2(10, 10)
+
 [node name="Origin" type="BigSpaceRoot3D" unique_id=1368632920]
-floating_origin_path = NodePath("Z1/CameraOrbitRoot")
+floating_origin_path = NodePath("CameraOrbitRoot")
+script = ExtResource("1_dd6y4")
 
-[node name="Z1" type="Node3D" parent="." unique_id=1258513382]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7000000, 0)
-_big_space/cell_y = 7000
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=181291161]
+environment = SubResource("Environment_auxoc")
 
-[node name="CameraOrbitRoot" parent="Z1" unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("2_ppyta")]
-target_follow_responsiveness = 10000.1
-target = NodePath("../Vessel2")
-
-[node name="Vessel2" parent="Z1" unique_id=379542788 instance=ExtResource("2_mih6t")]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2104640063]
+_big_space/cell_size_override_enabled = true
+shadow_enabled = true
 
 [node name="MoonOrigin" type="Node3D" parent="." unique_id=1801548224]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 768800000, 0, 0)
-_big_space/cell_x = 384400
-_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 384400000, 0, 0)
+transform = Transform3D(3476000, 0, 0, 0, 3476000, 0, 0, 0, 3476000, 768800000, 0, 0)
+_big_space/cell_x = 768800
+_big_space/cell_local_transform = Transform3D(3476000, 0, 0, 0, 3476000, 0, 0, 0, 3476000, 0, 0, 0)
 
 [node name="Moon" type="MeshInstance3D" parent="MoonOrigin" unique_id=1220418950]
-transform = Transform3D(1724000, 0, 0, 0, 1724000, 0, 0, 0, 1724000, 0, 0, 0)
-_big_space/cell_local_transform = Transform3D(1724000, 0, 0, 0, 1724000, 0, 0, 0, 1724000, 0, 0, 0)
 mesh = SubResource("SphereMesh_8uh7m")
 
 [node name="EarthOrigin" type="Node3D" parent="." unique_id=1101218610]
-transform = Transform3D(6000000, 0, 0, 0, 6000000, 0, 0, 0, 6000000, 0, 0, 0)
-_big_space/cell_local_transform = Transform3D(6000000, 0, 0, 0, 6000000, 0, 0, 0, 6000000, 0, 0, 0)
+transform = Transform3D(12000000, 0, 0, 0, 12000000, 0, 0, 0, 12000000, 0, 0, 0)
+_big_space/cell_local_transform = Transform3D(12000000, 0, 0, 0, 12000000, 0, 0, 0, 12000000, 0, 0, 0)
 
 [node name="Globe" parent="EarthOrigin" unique_id=1410850832 instance=ExtResource("3_mih6t")]
+
+[node name="CameraOrbitRoot" parent="." unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("2_ppyta")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12000000, 0)
+_big_space/cell_y = 6000
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6000000, 0)
+target_follow_responsiveness = 10000.1
+target = NodePath("../Z2/Vessel")
+
+[node name="Z1" type="Node3D" parent="." unique_id=592943862]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12000000, 0)
+_big_space/cell_y = 6000
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6000000, 0)
+
+[node name="Vessel" parent="Z1" unique_id=379542788 instance=ExtResource("2_mih6t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Z1" unique_id=47138318]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Z1/StaticBody3D" unique_id=434234364]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_mih6t")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Z1/StaticBody3D" unique_id=1455268462]
+mesh = SubResource("PlaneMesh_mih6t")
+
+[node name="Z2" type="Node3D" parent="." unique_id=389152539]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1537600000, 24000000, 0)
+_big_space/cell_x = 768800
+_big_space/cell_y = 12000
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 768800000, 12000000, 0)
+_big_space/cell_size_override_enabled = true
+
+[node name="Vessel" parent="Z2" unique_id=685530201 instance=ExtResource("2_mih6t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7700000000040743, 0)
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7700000000040743, 0)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Z2" unique_id=1544721388]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Z2/StaticBody3D" unique_id=497181452]
+shape = SubResource("BoxShape3D_dd6y4")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Z2/StaticBody3D" unique_id=934288529]
+mesh = SubResource("PlaneMesh_m5u1r")

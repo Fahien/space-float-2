@@ -4,6 +4,7 @@
 
 [node name="CameraOrbitRoot" type="Node3D" unique_id=188560390]
 script = ExtResource("1_4sq6p")
+target_follow_responsiveness = 1000.1
 
 [node name="YawPivot" type="Node3D" parent="." unique_id=127911199]
 
