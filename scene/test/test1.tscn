@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://pgbp783pcys8"]
+
+[ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="1_jvv6s"]
+[ext_resource type="PackedScene" uid="uid://bmmwajbmxcv1r" path="res://scene/vessel/vessel.tscn" id="2_ij64k"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_mih6t"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_dd6y4"]
+sky_material = SubResource("ProceduralSkyMaterial_mih6t")
+
+[sub_resource type="Environment" id="Environment_auxoc"]
+background_mode = 2
+sky = SubResource("Sky_dd6y4")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_us2rn"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jvv6s"]
+size = Vector3(2, 0.5, 2)
+
+[node name="Origin" type="Node3D" unique_id=1488445551]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=181291161]
+environment = SubResource("Environment_auxoc")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2104640063]
+_big_space/cell_size_override_enabled = true
+shadow_enabled = true
+
+[node name="Z1" type="Node3D" parent="." unique_id=1258513382]
+
+[node name="CameraOrbitRoot" parent="Z1" unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("1_jvv6s")]
+target_follow_responsiveness = 10000.1
+target = NodePath("../Vessel2")
+
+[node name="Vessel2" parent="Z1" unique_id=379542788 instance=ExtResource("2_ij64k")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.3593667861425907, 0)
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.3593667861425907, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Z1" unique_id=2051895699]
+mesh = SubResource("PlaneMesh_us2rn")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Z1/MeshInstance3D" unique_id=1518003791]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Z1/MeshInstance3D/StaticBody3D" unique_id=1020806151]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25004262, 0)
+shape = SubResource("BoxShape3D_jvv6s")

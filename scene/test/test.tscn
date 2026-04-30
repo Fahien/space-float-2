@@ -26,17 +26,6 @@ material = SubResource("StandardMaterial3D_37kl0")
 radius = 1.0
 height = 2.0
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_mih6t"]
-size = Vector3(100, 1, 100)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mih6t"]
-transparency = 1
-albedo_color = Color(0, 1, 0, 0.36078432)
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_mih6t"]
-material = SubResource("StandardMaterial3D_mih6t")
-size = Vector2(50, 50)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_dd6y4"]
 size = Vector3(10, 0.5, 10)
 
@@ -71,13 +60,14 @@ transform = Transform3D(12000000, 0, 0, 0, 12000000, 0, 0, 0, 12000000, 0, 0, 0)
 _big_space/cell_local_transform = Transform3D(12000000, 0, 0, 0, 12000000, 0, 0, 0, 12000000, 0, 0, 0)
 
 [node name="Globe" parent="EarthOrigin" unique_id=1410850832 instance=ExtResource("3_mih6t")]
+_big_space/cell_local_transform = Transform3D(6.123233995736766e-17, 0, 1, 0, 1, 0, -1, 0, 6.123233995736766e-17, 0, 0, 0)
 
 [node name="CameraOrbitRoot" parent="." unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("2_ppyta")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12000000, 0)
 _big_space/cell_y = 6000
 _big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6000000, 0)
 target_follow_responsiveness = 10000.1
-target = NodePath("../Z2/Vessel")
+target = NodePath("../Z1/Vessel")
 
 [node name="Z1" type="Node3D" parent="." unique_id=592943862]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12000000, 0)
@@ -88,16 +78,6 @@ _big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6000
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
 _big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Z1" unique_id=47138318]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Z1/StaticBody3D" unique_id=434234364]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-shape = SubResource("BoxShape3D_mih6t")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Z1/StaticBody3D" unique_id=1455268462]
-mesh = SubResource("PlaneMesh_mih6t")
-
 [node name="Z2" type="Node3D" parent="." unique_id=389152539]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1537600000, 24000000, 0)
 _big_space/cell_x = 768800
@@ -106,8 +86,8 @@ _big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7688000
 _big_space/cell_size_override_enabled = true
 
 [node name="Vessel" parent="Z2" unique_id=685530201 instance=ExtResource("2_mih6t")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7700000000040743, 0)
-_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7700000000040743, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.109370019286871, 0)
+_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.109370019286871, 0)
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Z2" unique_id=1544721388]
 

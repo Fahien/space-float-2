@@ -1,14 +1,7 @@
 @tool
 extends Node3D
 
-enum Face {
-	FRONT,
-	RIGHT,
-	UP,
-	BACK,
-	LEFT,
-	BOTTOM
-}
+class_name Globe
 
 @export
 var patch: PackedScene = null:
@@ -18,14 +11,20 @@ var patch: PackedScene = null:
 		_build()
 
 @export
+var lod := 0:
+	set(p_lod):
+		lod = p_lod
+		_build()
+
+@export
 var albedo: Texture2D = null:
 	set(p_albedo):
 		albedo = p_albedo
 		_update_albedo()
-		
+
 @onready
 var faces := $Faces
-		
+
 
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings: PackedStringArray = []
@@ -52,14 +51,17 @@ func _build() -> void:
 	if patch == null:
 		return
 
+	if faces == null:
+		return
+
 	var instances = []
 
-	instances.push_back(_instantiate_face(Face.FRONT))
-	instances.push_back(_instantiate_face(Face.RIGHT))
-	instances.push_back(_instantiate_face(Face.UP))
-	instances.push_back(_instantiate_face(Face.BACK))
-	instances.push_back(_instantiate_face(Face.LEFT))
-	instances.push_back(_instantiate_face(Face.BOTTOM))
+	_instantiate_face(faces, Patch.Face.FRONT)
+	_instantiate_face(faces, Patch.Face.RIGHT)
+	_instantiate_face(faces, Patch.Face.UP)
+	_instantiate_face(faces, Patch.Face.BACK)
+	_instantiate_face(faces, Patch.Face.LEFT)
+	_instantiate_face(faces, Patch.Face.BOTTOM)
 	
 	for instance in instances:
 		faces.add_child(instance)
@@ -68,13 +70,52 @@ func _build() -> void:
 
 	_update_albedo()
 
-func _instantiate_face(face: Face) -> MeshInstance3D:
-	var instance = patch.instantiate() as MeshInstance3D
+
+func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: float = 0.0, y: float = 0.0, u: int = 0, v: int = 0) -> void:
+	if patch == null:
+		push_error("Patch is not assigned. Cannot instantiate face.")
+		return
+
+	if level < 0:
+		push_error("Invalid LOD level. Cannot instantiate face.")
+		return
+
+	var face_width = 1.0 / pow(2, level)
+	
+	if level != lod:
+		var level_node = Node3D.new()
+		level_node.name = "Level_%d_%d_%d" % [level, u, v]
+		parent.add_child(level_node)
+		if Engine.is_editor_hint():
+			level_node.owner = get_tree().edited_scene_root
+		
+		var next_level = level + 1
+
+		var next_x = x + u * face_width
+		var next_y = y + v * face_width
+
+		_instantiate_face(level_node, face, next_level, next_x, next_y, 0, 0)
+		_instantiate_face(level_node, face, next_level, next_x, next_y, 0, 1)
+		_instantiate_face(level_node, face, next_level, next_x, next_y, 1, 0)
+		_instantiate_face(level_node, face, next_level, next_x, next_y, 1, 1)
+
+		return
+
+	var instance = patch.instantiate() as Patch
+	assert(instance != null)
+	instance.set_face(face)
+	instance.set_lod(level)
 
 	# Let's transform the vertices of the patch.
 	var vertices = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
 	var indices = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_INDEX]
 	var uvs = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_TEX_UV]
+
+	for i in range(uvs.size()):
+		var uv = uvs[i]
+		uv.x = face_width * uv.x + float(u) * face_width + x
+		uv.y = face_width * uv.y + float(v) * face_width + y
+		uvs[i] = uv
 
 	for i in range(vertices.size()):
 		var vertex = vertices[i]
@@ -87,24 +128,26 @@ func _instantiate_face(face: Face) -> MeshInstance3D:
 		vertex.z = 1.0
 		vertices[i] = vertex.normalized()
 
-	var l_rotation = Basis()
+	var l_basis = Basis()
 
 	match face:
-		Face.RIGHT:
-			l_rotation = Basis(Vector3(0, 1, 0), PI / 2.0)
-		Face.UP:
-			l_rotation = Basis(Vector3(1, 0, 0), -PI / 2.0)
-		Face.BACK:
-			l_rotation = Basis(Vector3(0, 1, 0), PI)
-		Face.LEFT:
-			l_rotation = Basis(Vector3(0, 1, 0), -PI / 2.0)
-		Face.BOTTOM:
-			l_rotation = Basis(Vector3(1, 0, 0), PI / 2.0)
+		Patch.Face.RIGHT:
+			l_basis = Basis(Vector3(0, 1, 0), PI / 2.0)
+		Patch.Face.UP:
+			l_basis = Basis(Vector3(1, 0, 0), -PI / 2.0)
+		Patch.Face.BACK:
+			l_basis = Basis(Vector3(0, 1, 0), PI)
+		Patch.Face.LEFT:
+			l_basis = Basis(Vector3(0, 1, 0), -PI / 2.0)
+		Patch.Face.BOTTOM:
+			l_basis = Basis(Vector3(1, 0, 0), PI / 2.0)
+
+	var l_scale = Vector3.ONE / float(1)
+	l_basis = l_basis.scaled(l_scale)
+	instance.transform.basis = l_basis
 
 	for i in range(vertices.size()):
-		uvs[i] = _direction_to_equirectangular_uv(l_rotation * vertices[i])
-
-	instance.transform.basis = l_rotation
+		uvs[i] = _direction_to_equirectangular_uv(instance.transform * vertices[i])
 
 	var arrays = instance.mesh.surface_get_arrays(0)
 	arrays[Mesh.ARRAY_VERTEX] = vertices
@@ -120,7 +163,10 @@ func _instantiate_face(face: Face) -> MeshInstance3D:
 	new_mesh.surface_set_material(0, material)
 
 	instance.mesh = new_mesh
-	return instance
+
+	parent.add_child(instance)
+	if Engine.is_editor_hint():
+		instance.owner = get_tree().edited_scene_root
 
 
 func _direction_to_equirectangular_uv(direction: Vector3) -> Vector2:

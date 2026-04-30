@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://tonp4lxkn5xu"]
 
 [ext_resource type="Texture2D" uid="uid://dk4yy8ym1ev0" path="res://texture/earth-1k.jpg" id="1_yml65"]
+[ext_resource type="Script" uid="uid://mtlaqkd3e2kq" path="res://scene/globe/patch.gd" id="2_1ybi2"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yml65"]
 albedo_texture = ExtResource("1_yml65")
@@ -13,3 +14,4 @@ center_offset = Vector3(0, 0, 0.5)
 
 [node name="Face" type="MeshInstance3D" unique_id=1018368537]
 mesh = SubResource("QuadMesh_2senw")
+script = ExtResource("2_1ybi2")
