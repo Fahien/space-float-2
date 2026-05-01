@@ -1,8 +1,8 @@
 extends Node
 
-@onready var orbit_camera := $CameraOrbitRoot
-@onready var earth_vessel := $Z1/Vessel
-@onready var moon_vessel := $Z2/Vessel
+@onready var orbit_camera := $EarthGrid/Z1/CameraOrbitRoot
+@onready var earth_vessel := $EarthGrid/Z1/Vessel
+@onready var moon_vessel := $EarthGrid/Z2/Vessel
 
 var target = earth_vessel
 

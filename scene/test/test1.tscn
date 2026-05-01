@@ -21,24 +21,25 @@ glow_enabled = true
 [sub_resource type="BoxShape3D" id="BoxShape3D_jvv6s"]
 size = Vector3(2, 0.5, 2)
 
-[node name="Origin" type="Node3D" unique_id=1488445551]
+[node name="Origin" type="BigSpaceRoot3D" unique_id=1320945063]
+cell_edge_length = 100.000001
+floating_origin_path = NodePath("Z1/CameraOrbitRoot")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=181291161]
 environment = SubResource("Environment_auxoc")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2104640063]
-_big_space/cell_size_override_enabled = true
 shadow_enabled = true
 
-[node name="Z1" type="Node3D" parent="." unique_id=1258513382]
+[node name="Z1" type="BigGrid3D" parent="." unique_id=1819296397]
+cell_x = 1
 
 [node name="CameraOrbitRoot" parent="Z1" unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("1_jvv6s")]
 target_follow_responsiveness = 10000.1
 target = NodePath("../Vessel2")
 
 [node name="Vessel2" parent="Z1" unique_id=379542788 instance=ExtResource("2_ij64k")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.3593667861425907, 0)
-_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.3593667861425907, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4790000000066357, 0)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Z1" unique_id=2051895699]
 mesh = SubResource("PlaneMesh_us2rn")

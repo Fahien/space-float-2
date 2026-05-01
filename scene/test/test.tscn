@@ -18,13 +18,10 @@ sky = SubResource("Sky_dd6y4")
 tonemap_mode = 2
 glow_enabled = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_37kl0"]
-albedo_color = Color(1, 0, 0, 1)
+[sub_resource type="CylinderMesh" id="CylinderMesh_dd6y4"]
 
-[sub_resource type="SphereMesh" id="SphereMesh_8uh7m"]
-material = SubResource("StandardMaterial3D_37kl0")
-radius = 1.0
-height = 2.0
+[sub_resource type="PlaneMesh" id="PlaneMesh_dd6y4"]
+size = Vector2(10, 10)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_dd6y4"]
 size = Vector3(10, 0.5, 10)
@@ -36,63 +33,73 @@ albedo_color = Color(1, 1, 0, 1)
 material = SubResource("StandardMaterial3D_auxoc")
 size = Vector2(10, 10)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_37kl0"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_8uh7m"]
+material = SubResource("StandardMaterial3D_37kl0")
+radius = 1.0
+height = 2.0
+
 [node name="Origin" type="BigSpaceRoot3D" unique_id=1368632920]
-floating_origin_path = NodePath("CameraOrbitRoot")
+floating_origin_path = NodePath("EarthGrid/Z1/CameraOrbitRoot")
 script = ExtResource("1_dd6y4")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=181291161]
 environment = SubResource("Environment_auxoc")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2104640063]
-_big_space/cell_size_override_enabled = true
 shadow_enabled = true
 
-[node name="MoonOrigin" type="Node3D" parent="." unique_id=1801548224]
-transform = Transform3D(3476000, 0, 0, 0, 3476000, 0, 0, 0, 3476000, 768800000, 0, 0)
-_big_space/cell_x = 768800
-_big_space/cell_local_transform = Transform3D(3476000, 0, 0, 0, 3476000, 0, 0, 0, 3476000, 0, 0, 0)
+[node name="EarthGrid" type="BigGrid3D" parent="." unique_id=503379286]
 
-[node name="Moon" type="MeshInstance3D" parent="MoonOrigin" unique_id=1220418950]
-mesh = SubResource("SphereMesh_8uh7m")
+[node name="EarthOrigin" type="Node3D" parent="EarthGrid" unique_id=1101218610]
+transform = Transform3D(6000000, 0, 0, 0, 6000000, 0, 0, 0, 6000000, 0, 0, 0)
 
-[node name="EarthOrigin" type="Node3D" parent="." unique_id=1101218610]
-transform = Transform3D(12000000, 0, 0, 0, 12000000, 0, 0, 0, 12000000, 0, 0, 0)
-_big_space/cell_local_transform = Transform3D(12000000, 0, 0, 0, 12000000, 0, 0, 0, 12000000, 0, 0, 0)
+[node name="Globe" parent="EarthGrid/EarthOrigin" unique_id=1410850832 instance=ExtResource("3_mih6t")]
 
-[node name="Globe" parent="EarthOrigin" unique_id=1410850832 instance=ExtResource("3_mih6t")]
-_big_space/cell_local_transform = Transform3D(6.123233995736766e-17, 0, 1, 0, 1, 0, -1, 0, 6.123233995736766e-17, 0, 0, 0)
+[node name="Z1" type="BigGrid3D" parent="EarthGrid" unique_id=980843861]
+cell_y = 6000
 
-[node name="CameraOrbitRoot" parent="." unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("2_ppyta")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12000000, 0)
-_big_space/cell_y = 6000
-_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6000000, 0)
+[node name="Vessel" parent="EarthGrid/Z1" unique_id=379542788 instance=ExtResource("2_mih6t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.782398249953983, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="EarthGrid/Z1" unique_id=1321334797]
+transform = Transform3D(1, 0, 0, 0, 10, 0, 0, 0, 1, 5, 0, 0)
+mesh = SubResource("CylinderMesh_dd6y4")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="EarthGrid/Z1" unique_id=110811138]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.880000000004657, 0, 0)
+mesh = SubResource("PlaneMesh_dd6y4")
+
+[node name="CameraOrbitRoot" parent="EarthGrid/Z1" unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("2_ppyta")]
 target_follow_responsiveness = 10000.1
-target = NodePath("../Z1/Vessel")
+target = NodePath("../Vessel")
 
-[node name="Z1" type="Node3D" parent="." unique_id=592943862]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12000000, 0)
-_big_space/cell_y = 6000
-_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6000000, 0)
+[node name="Z2" type="BigGrid3D" parent="EarthGrid" unique_id=1277963336]
+cell_x = 1
+cell_y = 6000
 
-[node name="Vessel" parent="Z1" unique_id=379542788 instance=ExtResource("2_mih6t")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.782398249953985, 0)
-_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.782398249953985, 0)
+[node name="Vessel" parent="EarthGrid/Z2" unique_id=685530201 instance=ExtResource("2_mih6t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 46.09129852492411, 0)
 
-[node name="Z2" type="Node3D" parent="." unique_id=389152539]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1537600000, 24000000, 0)
-_big_space/cell_x = 768800
-_big_space/cell_y = 12000
-_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 768800000, 12000000, 0)
-_big_space/cell_size_override_enabled = true
+[node name="StaticBody3D" type="StaticBody3D" parent="EarthGrid/Z2" unique_id=1544721388]
 
-[node name="Vessel" parent="Z2" unique_id=685530201 instance=ExtResource("2_mih6t")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.109370019286871, 0)
-_big_space/cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.109370019286871, 0)
-
-[node name="StaticBody3D" type="StaticBody3D" parent="Z2" unique_id=1544721388]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Z2/StaticBody3D" unique_id=497181452]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EarthGrid/Z2/StaticBody3D" unique_id=497181452]
 shape = SubResource("BoxShape3D_dd6y4")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Z2/StaticBody3D" unique_id=934288529]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="EarthGrid/Z2/StaticBody3D" unique_id=934288529]
 mesh = SubResource("PlaneMesh_m5u1r")
+
+[node name="MoonGrid" type="BigGrid3D" parent="." unique_id=1690969093]
+cell_x = 400000
+cell_y = 10000
+
+[node name="MoonOrigin" type="Node3D" parent="MoonGrid" unique_id=1801548224]
+transform = Transform3D(1737000, 0, 0, 0, 1737000, 0, 0, 0, 1737000, 0, 0, 0)
+
+[node name="Moon" type="MeshInstance3D" parent="MoonGrid/MoonOrigin" unique_id=1220418950]
+mesh = SubResource("SphereMesh_8uh7m")
+
+[node name="MoonNorthPole" type="BigGrid3D" parent="MoonGrid" unique_id=1114417980]
+cell_y = 3476

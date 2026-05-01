@@ -12,8 +12,6 @@ target_follow_responsiveness = 1000.1
 
 [node name="SpringArm3D" type="SpringArm3D" parent="YawPivot/PitchPivot" unique_id=1058564852]
 collision_mask = 2
-spring_length = 2.0
-margin = 1.0
 
 [node name="Camera3D" type="Camera3D" parent="YawPivot/PitchPivot/SpringArm3D" unique_id=1848053357]
 current = true
