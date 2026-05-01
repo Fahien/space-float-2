@@ -14,7 +14,7 @@ class_name VesselState
 
 extends RefCounted
 
-const GIMBAL_STRENGTH := 0.01
+const GIMBAL_STRENGTH := 10000.0
 
 ## Global position in meters, in the simulation's reference frame.
 var position: Vector3 = Vector3.ZERO
@@ -32,11 +32,11 @@ var angular_velocity: Vector3 = Vector3.ZERO
 ## Current throttle setting, 0.0 (off) to 1.0 (full).
 var _throttle: float = 0.0
 
-## Normalized actuator command for pitch and yaw deflection.
-var _gimbal_command: Vector2 = Vector2.ZERO
+## Normalized actuator command for pitch, yaw, and roll deflection.
+var _gimbal_command: Vector3 = Vector3.ZERO
 
-## Actual slewed gimbal angles in radians for pitch and yaw.
-var _gimbal_angles: Vector2 = Vector2.ZERO
+## Actual slewed gimbal angles in radians for pitch, yaw, and roll.
+var _gimbal_angles: Vector3 = Vector3.ZERO
 
 ## Mutable mass state for this vessel instance.
 var _mass_model: MassModel = MassModel.new()
@@ -74,26 +74,28 @@ func get_throttle() -> float:
 	return _throttle
 
 
-## Desired actuator command in normalized pitch/yaw space.
-func set_gimbal_command(p_gimbal_command: Vector2) -> void:
-	_gimbal_command = Vector2(
+## Desired actuator command in normalized pitch/yaw/roll space.
+func set_gimbal_command(p_gimbal_command: Vector3) -> void:
+	_gimbal_angles = Vector3(
 		clampf(p_gimbal_command.x, -1.0, 1.0) * GIMBAL_STRENGTH,
-		clampf(p_gimbal_command.y, -1.0, 1.0) * GIMBAL_STRENGTH
+		clampf(p_gimbal_command.y, -1.0, 1.0) * GIMBAL_STRENGTH,
+		clampf(p_gimbal_command.z, -1.0, 1.0) * GIMBAL_STRENGTH
 	)
 
 
-func get_gimbal_command() -> Vector2:
+func get_gimbal_command() -> Vector3:
 	return _gimbal_command
 
 
-func get_gimbal_angles() -> Vector2:
+func get_gimbal_angles() -> Vector3:
 	return _gimbal_angles
 
 
-func get_gimbal_angles_degrees() -> Vector2:
-	return Vector2(
+func get_gimbal_angles_degrees() -> Vector3:
+	return Vector3(
 		rad_to_deg(_gimbal_angles.x),
-		rad_to_deg(_gimbal_angles.y)
+		rad_to_deg(_gimbal_angles.y),
+		rad_to_deg(_gimbal_angles.z)
 	)
 
 
@@ -118,6 +120,7 @@ func resolve_gimbal_step(delta: float) -> Basis:
 	else:
 		_gimbal_angles.x = move_toward(_gimbal_angles.x, target_angles.x, max_step)
 		_gimbal_angles.y = move_toward(_gimbal_angles.y, target_angles.y, max_step)
+		_gimbal_angles.z = move_toward(_gimbal_angles.z, target_angles.z, max_step)
 	return get_actual_gimbal_basis_local()
 
 
@@ -126,6 +129,7 @@ func get_actual_gimbal_basis_local() -> Basis:
 	var gimbal_transform := Transform3D.IDENTITY
 	gimbal_transform = gimbal_transform.rotated_local(Vector3.RIGHT, _gimbal_angles.x)
 	gimbal_transform = gimbal_transform.rotated_local(Vector3.BACK, _gimbal_angles.y)
+	gimbal_transform = gimbal_transform.rotated_local(Vector3.UP, _gimbal_angles.z)
 	return gimbal_transform.basis.orthonormalized()
 
 

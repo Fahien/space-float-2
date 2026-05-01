@@ -64,13 +64,15 @@ func _process(_delta: float) -> void:
 	gravity_force_hud.text = "Gravity Force: %.2f N" % vessel.get_gravity_force().length()
 	thrust_hud.text = "Thrust Force: %.2f N" % vessel.get_thrust().length()
 	drag_hud.text = "Drag Force: %.2f N" % vessel.get_drag().length()
-	gimbal_command_hud.text = "Gimbal Command: (%.2f, %.2f)" % [
+	gimbal_command_hud.text = "Gimbal Command: (%.2f, %.2f, %.2f)" % [
 		vessel.get_gimbal_command().x,
 		vessel.get_gimbal_command().y,
+		vessel.get_gimbal_command().z,
 	]
-	gimbal_state_hud.text = "Gimbal State: pitch %.2f deg, yaw %.2f deg" % [
+	gimbal_state_hud.text = "Gimbal State: pitch %.2f deg, yaw %.2f deg, roll %.2f deg" % [
 		vessel.get_gimbal_angles_degrees().x,
 		vessel.get_gimbal_angles_degrees().y,
+		vessel.get_gimbal_angles_degrees().z,
 	]
 
 
@@ -87,16 +89,20 @@ func _sample_throttle_input() -> float:
 
 ## Positive pitch/yaw values are chosen so the resulting off-axis thrust
 ## produces pitch-up / yaw-left vehicle response for the current launch rig.
-func _sample_gimbal_input() -> Vector2:
-	var gimbal_command := Vector2.ZERO
-	if Input.is_action_pressed("ship_pitch_up", true):
-		gimbal_command.x += 1.0
-	if Input.is_action_pressed("ship_pitch_down", true):
-		gimbal_command.x -= 1.0
+func _sample_gimbal_input() -> Vector3:
+	var gimbal_command := Vector3.ZERO
+	if Input.is_action_pressed("ship_roll_left", true):
+		gimbal_command.z += 1.0
+	if Input.is_action_pressed("ship_roll_right", true):
+		gimbal_command.z -= 1.0
 	if Input.is_action_pressed("ship_yaw_left", true):
 		gimbal_command.y += 1.0
 	if Input.is_action_pressed("ship_yaw_right", true):
 		gimbal_command.y -= 1.0
+	if Input.is_action_pressed("ship_pitch_up", true):
+		gimbal_command.x += 1.0
+	if Input.is_action_pressed("ship_pitch_down", true):
+		gimbal_command.x -= 1.0
 	return gimbal_command
 
 
@@ -109,4 +115,6 @@ func _is_vessel_control_event(event: InputEvent) -> bool:
 		or event.is_action("ship_pitch_down")
 		or event.is_action("ship_yaw_left")
 		or event.is_action("ship_yaw_right")
+		or event.is_action("ship_roll_right")
+		or event.is_action("ship_roll_left")
 	)

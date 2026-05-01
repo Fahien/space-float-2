@@ -32,12 +32,6 @@ height = 0.6
 
 [sub_resource type="ImmediateMesh" id="ImmediateMesh_5bse1"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ve2wf"]
-no_depth_test = true
-shading_mode = 0
-vertex_color_use_as_albedo = true
-albedo_color = Color(1, 0, 0, 1)
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f3t2c"]
 no_depth_test = true
 shading_mode = 0
@@ -50,6 +44,12 @@ shading_mode = 0
 vertex_color_use_as_albedo = true
 albedo_color = Color(1, 0.5294118, 0, 1)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ve2wf"]
+no_depth_test = true
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(0, 0.42745098, 1, 1)
+
 [node name="Vessel" type="RigidBody3D" unique_id=1777554015]
 mass = 1000.0
 gravity_scale = 0.0
@@ -58,6 +58,7 @@ script = ExtResource("1_2jcqn")
 [node name="ThrusterShape" type="CollisionShape3D" parent="." unique_id=1336926297]
 transform = Transform3D(0.7071067, 0, 0.7071067, 0, 1, 0, -0.7071067, 0, 0.7071067, 0, -2.2, 0)
 shape = SubResource("BoxShape3D_806w6")
+disabled = true
 
 [node name="BodyShape" type="CollisionShape3D" parent="." unique_id=23153892]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
@@ -98,10 +99,12 @@ vector = Vector3(1, 1, 0)
 
 [node name="ThrustVector" parent="Debug" unique_id=1716662987 instance=ExtResource("7_33ik5")]
 mesh = SubResource("ImmediateMesh_5bse1")
-surface_material_override/0 = SubResource("StandardMaterial3D_ve2wf")
 vector = Vector3(-0.1, -1, 0)
 length_scale = 5.0
 material = SubResource("StandardMaterial3D_f3t2c")
 
 [node name="GravityVector" parent="Debug" unique_id=2106426619 instance=ExtResource("7_33ik5")]
 material = SubResource("StandardMaterial3D_5bse1")
+
+[node name="TorqueVector" parent="Debug" unique_id=86670521 instance=ExtResource("7_33ik5")]
+material = SubResource("StandardMaterial3D_ve2wf")

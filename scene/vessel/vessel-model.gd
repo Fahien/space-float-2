@@ -95,6 +95,7 @@ var _planet_model: PlanetModel = null
 
 @onready var _velocity_vector := $Debug/VelocityVector
 @onready var _thrust_vector := $Debug/ThrustVector
+@onready var _torque_vector := $Debug/TorqueVector
 @onready var _gravity_vector := $Debug/GravityVector
 
 func _ready() -> void:
@@ -118,7 +119,7 @@ func set_throttle(p_throttle: float) -> void:
 		sleeping = false
 
 
-func set_gimbal_command(p_gimbal_command: Vector2) -> void:
+func set_gimbal_command(p_gimbal_command: Vector3) -> void:
 	_state.set_gimbal_command(p_gimbal_command)
 	if (
 		p_gimbal_command.length_squared() > 0.0
@@ -145,15 +146,15 @@ func get_thrust() -> Vector3:
 	return _thrust
 
 
-func get_gimbal_command() -> Vector2:
+func get_gimbal_command() -> Vector3:
 	return _state.get_gimbal_command()
 
 
-func get_gimbal_angles() -> Vector2:
+func get_gimbal_angles() -> Vector3:
 	return _state.get_gimbal_angles()
 
 
-func get_gimbal_angles_degrees() -> Vector2:
+func get_gimbal_angles_degrees() -> Vector3:
 	return _state.get_gimbal_angles_degrees()
 
 
@@ -164,7 +165,6 @@ func get_thruster_gimbal_basis_local() -> Basis:
 func get_actual_thrust_direction_local() -> Vector3:
 	return (
 		_thruster_mount_local_basis
-		* _state.get_actual_gimbal_basis_local()
 		* Vector3.UP
 	).normalized()
 
@@ -192,7 +192,9 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 	_state.rotation = state.transform.basis
 	_state.angular_velocity = state.angular_velocity
 
-	_state.resolve_gimbal_step(state.step)
+	var world_torque = state.transform.basis * _state.get_gimbal_angles()
+	_torque_vector.vector =_state.get_gimbal_angles()
+	state.apply_torque(world_torque)
 	var thrust_magnitude := _state.resolve_propulsion_step(state.step)
 	var current_mass := _state.get_mass()
 	mass = current_mass

@@ -40,13 +40,15 @@ extends Resource
 ## Runtime role:
 ## - converted to radians and used by `VesselState` to clamp pitch commands
 ## - mirrored visually by the render-only thruster pivot
-@export_range(0.0, 30.0, 0.1) var max_gimbal_pitch_degrees := 5.0
+@export_range(0.0, 3000.0, 1.0) var max_gimbal_pitch_degrees := 5.0
 
 ## Maximum nozzle deflection around the vessel-local yaw axis, in degrees.
 ##
 ## This is independent from pitch so asymmetric actuator limits can be authored
 ## later without changing the contract.
-@export_range(0.0, 30.0, 0.1) var max_gimbal_yaw_degrees := 5.0
+@export_range(0.0, 3000.0, 1.0) var max_gimbal_yaw_degrees := 5.0
+
+@export_range(0.0, 3000.0, 1.0) var max_gimbal_roll_degrees := 0.0
 
 ## Maximum actuator slew rate for both gimbal axes, in degrees per second.
 ##
@@ -61,7 +63,7 @@ extends Resource
 ## Safety:
 ## - safe to author in the editor
 ## - changing it at runtime changes actuator response immediately
-@export_range(0.0, 180.0, 0.1) var gimbal_slew_degrees_per_second := 20.0
+@export_range(0.0, 500.0, 0.1) var gimbal_slew_degrees_per_second := 20.0
 
 
 ## Returns requested thrust magnitude for the given throttle command.
@@ -77,10 +79,11 @@ func get_propellant_flow(throttle: float) -> float:
 
 
 ## Returns the configured gimbal limits in radians for pitch and yaw.
-func get_gimbal_limit_radians() -> Vector2:
-	return Vector2(
+func get_gimbal_limit_radians() -> Vector3:
+	return Vector3(
 		deg_to_rad(maxf(max_gimbal_pitch_degrees, 0.0)),
-		deg_to_rad(maxf(max_gimbal_yaw_degrees, 0.0))
+		deg_to_rad(maxf(max_gimbal_yaw_degrees, 0.0)),
+		deg_to_rad(maxf(max_gimbal_roll_degrees, 0.0))
 	)
 
 
@@ -90,13 +93,15 @@ func get_gimbal_slew_rate_radians() -> float:
 
 
 ## Converts a normalized actuator command into bounded target angles.
-func get_gimbal_target_angles(command: Vector2) -> Vector2:
+func get_gimbal_target_angles(command: Vector3) -> Vector3:
 	var limits := get_gimbal_limit_radians()
-	var clamped_command := Vector2(
+	var clamped_command := Vector3(
 		clampf(command.x, -1.0, 1.0),
-		clampf(command.y, -1.0, 1.0)
+		clampf(command.y, -1.0, 1.0),
+		clampf(command.z, -1.0, 1.0)
 	)
-	return Vector2(
+	return Vector3(
 		clamped_command.x * limits.x,
-		clamped_command.y * limits.y
+		clamped_command.y * limits.y,
+		clamped_command.z * limits.z
 	)

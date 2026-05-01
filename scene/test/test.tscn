@@ -34,7 +34,11 @@ script = ExtResource("9_tfij0")
 
 [sub_resource type="Resource" id="Resource_obuoi"]
 script = ExtResource("10_y05iy")
-max_thrust_newtons = 2560000.0
+max_thrust_newtons = 160000.0
+max_gimbal_pitch_degrees = 2976.0
+max_gimbal_yaw_degrees = 3000.0
+max_gimbal_roll_degrees = 2820.0
+gimbal_slew_degrees_per_second = 500.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tfij0"]
 albedo_texture = ExtResource("10_tfij0")
@@ -60,13 +64,11 @@ radius = 6371000.0
 mu = 398600441800000.0
 
 [node name="Globe" parent="EarthGrid/EarthOrigin" unique_id=1410850832 instance=ExtResource("3_mih6t")]
-transform = Transform3D(3.061616997868383e-17, 5.302876193624534e-17, 1, -0.8660254037844386, 0.5000000000000001, 0, -0.5000000000000001, -0.8660254037844386, 6.123233995736766e-17, 0, 0, 0)
+transform = Transform3D(3.749399456654644e-33, 6.123233995736766e-17, 1, -1, 6.123233995736766e-17, 0, -6.123233995736766e-17, -1, 6.123233995736766e-17, 0, 0, 0)
+lod = 3
 
 [node name="Z1" type="BigGrid3D" parent="EarthGrid" unique_id=980843861]
 cell_y = 6371
-
-[node name="Vessel" parent="EarthGrid/Z1" unique_id=379542788 instance=ExtResource("2_mih6t")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.94198499103992, 20, 0)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="EarthGrid/Z1" unique_id=1321334797]
 transform = Transform3D(1, 0, 0, 0, 10, 0, 0, 0, 1, 5, 0, 0)
