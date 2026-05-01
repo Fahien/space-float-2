@@ -1,16 +1,18 @@
 [gd_scene format=3 uid="uid://dbliypb3g41l"]
 
 [ext_resource type="Script" uid="uid://rcqopnr65qsb" path="res://scene/test/test.gd" id="1_dd6y4"]
+[ext_resource type="Texture2D" uid="uid://c11pdoeo7i4fy" path="res://texture/milky-way.jpg" id="2_m5u1r"]
 [ext_resource type="PackedScene" uid="uid://bmmwajbmxcv1r" path="res://scene/vessel/vessel.tscn" id="2_mih6t"]
 [ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="2_ppyta"]
+[ext_resource type="Texture2D" uid="uid://dk4yy8ym1ev0" path="res://texture/earth-1k.jpg" id="3_auxoc"]
 [ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="3_mih6t"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_mih6t"]
-sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
-ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_ra30r"]
+panorama = ExtResource("2_m5u1r")
+energy_multiplier = 0.1
 
 [sub_resource type="Sky" id="Sky_dd6y4"]
-sky_material = SubResource("ProceduralSkyMaterial_mih6t")
+sky_material = SubResource("PanoramaSkyMaterial_ra30r")
 
 [sub_resource type="Environment" id="Environment_auxoc"]
 background_mode = 2
@@ -23,33 +25,16 @@ glow_enabled = true
 [sub_resource type="PlaneMesh" id="PlaneMesh_dd6y4"]
 size = Vector2(10, 10)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_dd6y4"]
-size = Vector3(10, 0.5, 10)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_auxoc"]
-albedo_color = Color(1, 1, 0, 1)
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_m5u1r"]
-material = SubResource("StandardMaterial3D_auxoc")
-size = Vector2(10, 10)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_37kl0"]
-albedo_color = Color(1, 0, 0, 1)
-
-[sub_resource type="SphereMesh" id="SphereMesh_8uh7m"]
-material = SubResource("StandardMaterial3D_37kl0")
-radius = 1.0
-height = 2.0
-
 [node name="Origin" type="BigSpaceRoot3D" unique_id=1368632920]
 floating_origin_path = NodePath("EarthGrid/Z1/CameraOrbitRoot")
 script = ExtResource("1_dd6y4")
 
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2104640063]
+transform = Transform3D(1, 0, 0, 0, 0.8400917202106111, 0.5424443765341996, 0, -0.5424443765341996, 0.8400917202106111, 0, 5.940803546842095, -8.881784e-16)
+shadow_enabled = true
+
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=181291161]
 environment = SubResource("Environment_auxoc")
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2104640063]
-shadow_enabled = true
 
 [node name="EarthGrid" type="BigGrid3D" parent="." unique_id=503379286]
 
@@ -57,12 +42,13 @@ shadow_enabled = true
 transform = Transform3D(6000000, 0, 0, 0, 6000000, 0, 0, 0, 6000000, 0, 0, 0)
 
 [node name="Globe" parent="EarthGrid/EarthOrigin" unique_id=1410850832 instance=ExtResource("3_mih6t")]
+albedo = ExtResource("3_auxoc")
 
 [node name="Z1" type="BigGrid3D" parent="EarthGrid" unique_id=980843861]
 cell_y = 6000
 
 [node name="Vessel" parent="EarthGrid/Z1" unique_id=379542788 instance=ExtResource("2_mih6t")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.782398249953983, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, 0)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="EarthGrid/Z1" unique_id=1321334797]
 transform = Transform3D(1, 0, 0, 0, 10, 0, 0, 0, 1, 5, 0, 0)
@@ -76,30 +62,20 @@ mesh = SubResource("PlaneMesh_dd6y4")
 target_follow_responsiveness = 10000.1
 target = NodePath("../Vessel")
 
-[node name="Z2" type="BigGrid3D" parent="EarthGrid" unique_id=1277963336]
-cell_x = 1
-cell_y = 6000
-
-[node name="Vessel" parent="EarthGrid/Z2" unique_id=685530201 instance=ExtResource("2_mih6t")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 46.09129852492411, 0)
-
-[node name="StaticBody3D" type="StaticBody3D" parent="EarthGrid/Z2" unique_id=1544721388]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="EarthGrid/Z2/StaticBody3D" unique_id=497181452]
-shape = SubResource("BoxShape3D_dd6y4")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="EarthGrid/Z2/StaticBody3D" unique_id=934288529]
-mesh = SubResource("PlaneMesh_m5u1r")
-
 [node name="MoonGrid" type="BigGrid3D" parent="." unique_id=1690969093]
 cell_x = 400000
 cell_y = 10000
 
+[node name="Z2" type="BigGrid3D" parent="MoonGrid" unique_id=1277963336]
+cell_y = 1737
+
+[node name="Vessel" parent="MoonGrid/Z2" unique_id=685530201 instance=ExtResource("2_mih6t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 46.09129852492411, 0)
+
 [node name="MoonOrigin" type="Node3D" parent="MoonGrid" unique_id=1801548224]
 transform = Transform3D(1737000, 0, 0, 0, 1737000, 0, 0, 0, 1737000, 0, 0, 0)
 
-[node name="Moon" type="MeshInstance3D" parent="MoonGrid/MoonOrigin" unique_id=1220418950]
-mesh = SubResource("SphereMesh_8uh7m")
+[node name="Globe" parent="MoonGrid/MoonOrigin" unique_id=493463791 instance=ExtResource("3_mih6t")]
 
 [node name="MoonNorthPole" type="BigGrid3D" parent="MoonGrid" unique_id=1114417980]
 cell_y = 3476

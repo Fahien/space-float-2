@@ -164,6 +164,7 @@ func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: floa
 	new_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 
 	var material = instance.mesh.surface_get_material(0).duplicate() as StandardMaterial3D
+	material.albedo_texture = albedo
 
 	new_mesh.surface_set_material(0, material)
 
@@ -206,7 +207,7 @@ func _update_albedo() -> void:
 	if faces == null:
 		return
 
-	for child in faces.get_children():
+	for child in faces.get_children(true):
 		if child is MeshInstance3D:
 			var material = child.get_active_material(0)
 			if material is StandardMaterial3D:

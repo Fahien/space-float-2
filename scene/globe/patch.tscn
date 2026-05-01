@@ -13,5 +13,6 @@ subdivide_depth = 32
 center_offset = Vector3(0, 0, 0.5)
 
 [node name="Face" type="MeshInstance3D" unique_id=1018368537]
+cast_shadow = 0
 mesh = SubResource("QuadMesh_2senw")
 script = ExtResource("2_1ybi2")
