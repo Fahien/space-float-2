@@ -42,7 +42,6 @@ extends Node
 @onready var drag_hud := $"CanvasLayer/Margin/VesselPanel/Margin/VBox/DragForce"
 @onready var gimbal_command_hud := $"CanvasLayer/Margin/VesselPanel/Margin/VBox/GimbalCommand"
 @onready var gimbal_state_hud := $"CanvasLayer/Margin/VesselPanel/Margin/VBox/GimbalState"
-@onready var camera_hud := $"CanvasLayer/Margin/VesselPanel/Margin/VBox/Camera"
 
 
 func _input(event: InputEvent) -> void:

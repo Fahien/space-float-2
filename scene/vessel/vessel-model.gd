@@ -95,6 +95,7 @@ var _planet_model: PlanetModel = null
 
 @onready var _velocity_vector := $Debug/VelocityVector
 @onready var _thrust_vector := $Debug/ThrustVector
+@onready var _gravity_vector := $Debug/GravityVector
 
 func _ready() -> void:
 	_state.configure_models(mass_model, propulsion_model)
@@ -134,7 +135,7 @@ func _process(_delta: float) -> void:
 	
 	_velocity_vector.vector = _state.velocity
 	_thrust_vector.vector = _thrust
-
+	_gravity_vector.vector = _gravity_force
 
 func get_throttle() -> float:
 	return _state.get_throttle()

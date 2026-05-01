@@ -171,7 +171,3 @@ text = "Gimbal Command"
 [node name="GimbalState" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=1332437602]
 layout_mode = 2
 text = "Gimbal State"
-
-[node name="Camera" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=691998506]
-layout_mode = 2
-text = "Camera"
