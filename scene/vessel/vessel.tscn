@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://b8pd5bh6hkfcq" path="res://model/rocket_sidesA.glb" id="4_qxjg4"]
 [ext_resource type="PackedScene" uid="uid://ccbprocbgm4is" path="res://model/rocket_topA.glb" id="5_7cyab"]
 [ext_resource type="PackedScene" uid="uid://y7416ti5t5q5" path="res://model/rocket_fuelB.glb" id="6_fuy4e"]
+[ext_resource type="PackedScene" uid="uid://umbgtg0lii6u" path="res://scene/vector/vector.tscn" id="7_33ik5"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_806w6"]
 size = Vector3(1.3, 0.6, 1.3)
@@ -26,6 +27,22 @@ scale_curve = SubResource("CurveTexture_ov8y2")
 [sub_resource type="SphereMesh" id="SphereMesh_a71mc"]
 radius = 0.3
 height = 0.6
+
+[sub_resource type="ImmediateMesh" id="ImmediateMesh_f3t2c"]
+
+[sub_resource type="ImmediateMesh" id="ImmediateMesh_5bse1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ve2wf"]
+no_depth_test = true
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f3t2c"]
+no_depth_test = true
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(0, 1, 0, 1)
 
 [node name="Vessel" type="RigidBody3D" unique_id=1777554015]
 mass = 1000.0
@@ -66,3 +83,16 @@ emitting = false
 local_coords = true
 process_material = SubResource("ParticleProcessMaterial_w0byr")
 draw_pass_1 = SubResource("SphereMesh_a71mc")
+
+[node name="Debug" type="Node3D" parent="." unique_id=919782717]
+
+[node name="VelocityVector" parent="Debug" unique_id=429642951 instance=ExtResource("7_33ik5")]
+mesh = SubResource("ImmediateMesh_f3t2c")
+vector = Vector3(1, 1, 0)
+
+[node name="ThrustVector" parent="Debug" unique_id=1716662987 instance=ExtResource("7_33ik5")]
+mesh = SubResource("ImmediateMesh_5bse1")
+surface_material_override/0 = SubResource("StandardMaterial3D_ve2wf")
+vector = Vector3(-0.1, -1, 0)
+length_scale = 5.0
+material = SubResource("StandardMaterial3D_f3t2c")

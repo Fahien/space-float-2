@@ -93,6 +93,8 @@ var _thruster_active: bool = false
 ## Environment model used to resolve simulation-space gravity and altitude.
 var _planet_model: PlanetModel = null
 
+@onready var _velocity_vector := $Debug/VelocityVector
+@onready var _thrust_vector := $Debug/ThrustVector
 
 func _ready() -> void:
 	_state.configure_models(mass_model, propulsion_model)
@@ -129,6 +131,9 @@ func _process(_delta: float) -> void:
 	# from the requested throttle, so fuel starvation visibly cuts off.
 	_thruster_active = _thrust.length_squared() > 0.0
 	_thruster_mount.emitting = _thruster_active
+	
+	_velocity_vector.vector = _state.velocity
+	_thrust_vector.vector = _thrust
 
 
 func get_throttle() -> float:
