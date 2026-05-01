@@ -5,7 +5,7 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_e8jdq"]
 size = Vector3(2, 0.6, 2.067)
 
-[node name="Vessel" type="RigidBody3D" unique_id=379542788]
+[node name="Speeder" type="RigidBody3D" unique_id=379542788]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=530175868]
 shape = SubResource("BoxShape3D_e8jdq")

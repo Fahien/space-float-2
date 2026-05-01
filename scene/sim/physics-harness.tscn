@@ -1,0 +1,142 @@
+[gd_scene format=3 uid="uid://cpec51wmm7j47"]
+
+[ext_resource type="Script" uid="uid://bpghq5mq8lkta" path="res://scene/sim/physics-harness.gd" id="1_qgu2g"]
+[ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="8_im7mo"]
+[ext_resource type="Texture2D" uid="uid://c11pdoeo7i4fy" path="res://texture/milky-way.jpg" id="9_ov8y2"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_anchor_marker"]
+transparency = 1
+no_depth_test = true
+shading_mode = 0
+albedo_color = Color(1, 0.29587984, 0.1549719, 0.5882353)
+
+[sub_resource type="SphereMesh" id="SphereMesh_anchor_marker"]
+radius = 0.6
+height = 1.2
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_kojjw"]
+panorama = ExtResource("9_ov8y2")
+
+[sub_resource type="Sky" id="Sky_npcor"]
+sky_material = SubResource("PanoramaSkyMaterial_kojjw")
+
+[sub_resource type="Environment" id="Environment_ulxnf"]
+background_mode = 2
+sky = SubResource("Sky_npcor")
+glow_enabled = true
+
+[node name="PhysicsHarness" type="Node" unique_id=1346818643]
+script = ExtResource("1_qgu2g")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1747032491]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+shadow_enabled = true
+
+[node name="SimulationRoot" type="Node3D" parent="." unique_id=1156960177]
+
+[node name="Ground" parent="SimulationRoot" unique_id=401699391]
+
+[node name="Vessel" parent="SimulationRoot" unique_id=1619987435]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1018663091]
+
+[node name="Margin" type="MarginContainer" parent="CanvasLayer" unique_id=2132658044]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VesselPanel" type="PanelContainer" parent="CanvasLayer/Margin" unique_id=622979511]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="Margin" type="MarginContainer" parent="CanvasLayer/Margin/VesselPanel" unique_id=567990667]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/Margin/VesselPanel/Margin" unique_id=1000728771]
+layout_mode = 2
+
+[node name="Vessel" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=219821547]
+layout_mode = 2
+text = "Vessel"
+
+[node name="Mass" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=1080011198]
+layout_mode = 2
+text = "Mass"
+
+[node name="Speed" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=1505589016]
+layout_mode = 2
+text = "Speed"
+
+[node name="Altitude" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=584030738]
+layout_mode = 2
+text = "Altitude"
+
+[node name="Gravity" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=1344771264]
+layout_mode = 2
+text = "Gravity"
+
+[node name="GravityForce" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=1908656070]
+layout_mode = 2
+text = "Gravity Force"
+
+[node name="ThrustForce" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=788758356]
+layout_mode = 2
+text = "Thrust Force"
+
+[node name="DragForce" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=1158848662]
+layout_mode = 2
+text = "Drag Force"
+
+[node name="GimbalCommand" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=543981334]
+layout_mode = 2
+text = "Gimbal Command"
+
+[node name="GimbalState" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=1876680150]
+layout_mode = 2
+text = "Gimbal State"
+
+[node name="Camera" type="Label" parent="CanvasLayer/Margin/VesselPanel/Margin/VBox" unique_id=490137198]
+layout_mode = 2
+text = "Camera"
+
+[node name="View" type="Node3D" parent="." unique_id=1006866480]
+
+[node name="SurfaceAnchorMarker" type="MeshInstance3D" parent="View" unique_id=1295280048]
+material_override = SubResource("StandardMaterial3D_anchor_marker")
+mesh = SubResource("SphereMesh_anchor_marker")
+
+[node name="RenderAnchorVector" type="MeshInstance3D" parent="View" unique_id=1028543005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2052126, 0)
+
+[node name="VelocityVector" type="MeshInstance3D" parent="View" unique_id=2010001001]
+
+[node name="GravityVector" type="MeshInstance3D" parent="View" unique_id=2010001002]
+
+[node name="ThrustVector" type="MeshInstance3D" parent="View" unique_id=2010001003]
+
+[node name="DragVector" type="MeshInstance3D" parent="View" unique_id=2010001004]
+
+[node name="LocalUpVector" type="MeshInstance3D" parent="View" unique_id=2010001005]
+
+[node name="GroundPresentationHost" type="Node3D" parent="View" unique_id=355329640]
+
+[node name="VesselPresentationHost" type="Node3D" parent="View" unique_id=859567378]
+
+[node name="CameraOrbitRoot" parent="." unique_id=188560390 instance=ExtResource("8_im7mo")]
+
+[node name="WorldEnvironment2" type="WorldEnvironment" parent="." unique_id=1729609132]
+environment = SubResource("Environment_ulxnf")
+
+[editable path="CameraOrbitRoot"]

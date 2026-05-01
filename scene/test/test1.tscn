@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://pgbp783pcys8"]
 
 [ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="1_jvv6s"]
-[ext_resource type="PackedScene" uid="uid://bmmwajbmxcv1r" path="res://scene/vessel/vessel.tscn" id="2_ij64k"]
+[ext_resource type="PackedScene" uid="uid://bmmwajbmxcv1r" path="res://scene/speeder/speeder.tscn" id="2_ij64k"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_mih6t"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)

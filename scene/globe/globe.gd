@@ -17,10 +17,10 @@ var lod := 0:
 		_build()
 
 @export
-var albedo: Texture2D = null:
-	set(p_albedo):
-		albedo = p_albedo
-		_update_albedo()
+var material: StandardMaterial3D = null:
+	set(p_material):
+		material = p_material
+		_apply_material()
 
 @onready
 var faces := $Faces
@@ -35,6 +35,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return warnings
 
 func _ready() -> void:
+	_apply_material()
 	update_configuration_warnings()
 
 func _clear_faces() -> void:
@@ -67,8 +68,6 @@ func _build() -> void:
 		faces.add_child(instance)
 		if Engine.is_editor_hint():
 			instance.owner = get_tree().edited_scene_root
-
-	_update_albedo()
 
 
 func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: float = 0.0, y: float = 0.0, u: int = 0, v: int = 0) -> void:
@@ -163,10 +162,8 @@ func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: floa
 	var new_mesh = ArrayMesh.new()
 	new_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 
-	var material = instance.mesh.surface_get_material(0).duplicate() as StandardMaterial3D
-	material.albedo_texture = albedo
-
-	new_mesh.surface_set_material(0, material)
+	if material != null:
+		instance.set_surface_override_material(0, material)
 
 	instance.mesh = new_mesh
 
@@ -203,12 +200,15 @@ func _direction_to_equirectangular_uv(direction: Vector3) -> Vector2:
 	return Vector2(x, y)
 
 
-func _update_albedo() -> void:
+func _apply_material() -> void:
 	if faces == null:
 		return
 
-	for child in faces.get_children(true):
-		if child is MeshInstance3D:
-			var material = child.get_active_material(0)
-			if material is StandardMaterial3D:
-				material.albedo_texture = albedo
+	var nodes = [faces]
+	while !nodes.is_empty():
+		var node = nodes.pop_front()
+		for child in node.get_children():
+			if child is MeshInstance3D:
+				child.set_surface_override_material(0, material)
+			elif child is Node:
+				nodes.append(child)
