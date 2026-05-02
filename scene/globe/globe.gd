@@ -1,8 +1,39 @@
 @tool
 extends Node3D
 
+## Cube-sphere globe assembly node.
+##
+## `Globe` owns the scene-level structure for a planet mesh, but deliberately
+## leaves the per-tile mesh generation to `Patch`. Its job is to:
+## - instantiate one `Patch` scene for each visible cube-face tile
+## - walk a fixed quadtree from LOD 0 down to the requested leaf `lod`
+## - pass face, tile-origin, quadrant, LOD, and material inputs into each patch
+## - let each patch generate its local render/collision children and apply its
+##   own cube-face transform
+## - keep editor-generated children owned by the edited scene so the globe can
+##   be previewed and saved from the inspector
+##
+## Coordinate contract:
+## - every cube face is addressed in normalized 0..1 UV space
+## - LOD 0 is a single tile covering the whole face
+## - each deeper LOD splits a tile into four quadrants
+## - `x`/`y` passed to `Patch` are the accumulated parent-tile origin
+## - `u`/`v` passed to `Patch` select the child quadrant inside that origin
+##
+## Generated subtree:
+## - all generated face content lives below the authored `Faces` child node
+## - branch nodes named `Level_*` exist only to group quadtree levels
+## - leaf nodes are `Patch` roots with generated mesh/collision children
+## - rebuilding clears and recreates this generated subtree
 class_name Globe
 
+## Packed scene used for each generated globe tile.
+##
+## The scene is expected to instantiate as `Patch`. `Globe` configures each
+## instance through `Patch._init_face()`, so the packed scene should provide the
+## seed mesh and any patch-local authoring defaults. Reassigning this value
+## updates editor warnings and attempts a rebuild when this node is already in
+## the scene tree.
 @export
 var patch: PackedScene = null:
 	set(p_patch):
@@ -10,39 +41,80 @@ var patch: PackedScene = null:
 		update_configuration_warnings()
 		_build()
 
+## Target quadtree leaf level for every cube face.
+##
+## LOD 0 creates six leaf patches, one for each cube face. Each increment
+## subdivides every face tile into four children, producing `6 * 4^lod` leaf
+## patches. This node currently builds a uniform LOD across the whole globe;
+## there is no camera-dependent or per-face refinement here.
 @export
 var lod := 0:
 	set(p_lod):
 		lod = p_lod
 		_build()
 
+## Shared material applied to generated patch meshes.
+##
+## New patch instances receive this value before `Patch.build()` runs. Existing
+## generated `MeshInstance3D` descendants are updated in place by the setter so
+## material edits in the inspector do not require a full rebuild.
 @export
 var material: StandardMaterial3D = null:
 	set(p_material):
 		material = p_material
 		_apply_material()
 
+## Authored container for generated face nodes.
+##
+## Keeping generated content under a stable child makes rebuilds simple and
+## prevents editor-time output from being mixed with other authored children of
+## the `Globe` node.
 @onready
 var faces := $Faces
 
 
+## Reports missing authoring inputs in the editor inspector.
+##
+## The build path can safely return without a patch scene, but a configuration
+## warning makes an incomplete globe scene obvious while authoring.
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings: PackedStringArray = []
 	
 	if patch == null:
-		warnings.append("Patch is not assigned. Set 'patch' property to a MeshInstance3D.")
+		warnings.append("Patch is not assigned. Set 'patch' property to a Patch scene.")
 		
 	return warnings
 
+
+## Finalizes editor/runtime setup once child paths are available.
+##
+## The material pass covers any generated children that were serialized in the
+## scene file or created by editor-time property setters before `_ready()`.
 func _ready() -> void:
 	_apply_material()
 	update_configuration_warnings()
 
+
+## Removes all generated face content from the `Faces` container.
+##
+## Rebuilds are destructive by design: the quadtree shape, tile coordinates,
+## face transforms, and patch meshes are all derived output from the current
+## exported properties. Detaching children immediately keeps the editor tree in
+## sync, while `queue_free()` lets Godot dispose of them safely.
 func _clear_faces() -> void:
 	for child in faces.get_children():
 		faces.remove_child(child)
 		child.queue_free()
 
+
+## Rebuilds the entire globe from the current exported properties.
+##
+## This method is called from property setters in tool mode, so it must tolerate
+## being invoked before the node is ready. Once inside the tree, it clears stale
+## generated output first, then creates all six cube faces at the requested LOD.
+##
+## `Patch.build()` owns mesh and collision generation. `Globe` only owns the
+## scene hierarchy and the high-level face/quadtree traversal.
 func _build() -> void:
 	if not is_inside_tree():
 		return
@@ -57,6 +129,8 @@ func _build() -> void:
 
 	var instances = []
 
+	# Build order is kept explicit so the six serialized face values are easy
+	# to compare with `Patch.Face` and with generated scene output.
 	_instantiate_face(faces, Patch.Face.FRONT)
 	_instantiate_face(faces, Patch.Face.RIGHT)
 	_instantiate_face(faces, Patch.Face.UP)
@@ -70,6 +144,25 @@ func _build() -> void:
 			instance.owner = get_tree().edited_scene_root
 
 
+## Creates one quadtree branch or one leaf patch for a cube face.
+##
+## Parameters:
+## - `parent`: node that receives the branch node or leaf patch generated here
+## - `face`: cube face being populated
+## - `level`: current quadtree depth, where 0 covers a whole face
+## - `x`/`y`: accumulated parent-tile origin in normalized face UV space
+## - `u`/`v`: quadrant of the current tile inside its parent, each 0 or 1
+##
+## Branch behavior:
+## - when `level` is lower than `lod`, this creates a grouping node and recurses
+##   into the four child quadrants
+## - child origins are advanced by this level's tile width before the next
+##   recursive step
+##
+## Leaf behavior:
+## - when `level` equals `lod`, this instantiates `patch` as `Patch`
+## - all patch inputs are passed to `Patch._init_face()`, which applies the
+##   face transform and rebuilds the patch-local generated children
 func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: float = 0.0, y: float = 0.0, u: int = 0, v: int = 0) -> void:
 	if patch == null:
 		push_error("Patch is not assigned. Cannot instantiate face.")
@@ -79,6 +172,9 @@ func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: floa
 		push_error("Invalid LOD level. Cannot instantiate face.")
 		return
 
+	# At each level, `face_width` describes the current tile size in normalized
+	# face space. Child tile origins advance by this amount before their own
+	# next-level width is computed.
 	var face_width = 1.0 / pow(2, level)
 	
 	if level != lod:
@@ -90,6 +186,9 @@ func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: floa
 		
 		var next_level = level + 1
 
+		# `x`/`y` are the parent origin. `u`/`v` select which quadrant this node
+		# represents at the current level, so the child origin is offset before
+		# the recursion chooses each child's own quadrant.
 		var next_x = x + u * face_width
 		var next_y = y + v * face_width
 
@@ -102,108 +201,20 @@ func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: floa
 
 	var instance = patch.instantiate() as Patch
 	assert(instance != null)
-	instance.set_face(face)
-	instance.set_lod(level)
-
-	# Let's transform the vertices of the patch.
-	var vertices = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
-	var indices = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_INDEX]
-	var normals = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
-	var uvs = instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_TEX_UV]
-
-	for i in range(uvs.size()):
-		var uv = uvs[i]
-		uv.x = face_width * uv.x + float(u) * face_width + x
-		uv.y = face_width * uv.y + float(v) * face_width + y
-		uvs[i] = uv
-
-	for i in range(vertices.size()):
-		var vertex = vertices[i]
-		# Let's use the algebraic sigmoid function to create a better distribution of vertices on the sphere.
-		var sigma = 0.87 * 0.87
-		var uv = uvs[i]
-		uv.y = 1.0 - uv.y # Flip the V coordinate to match the expected orientation.
-		vertex.x = (2 * uv.x - 1) / sqrt(1.0 - 4 * sigma * uv.x * (uv.x - 1.0))
-		vertex.y = (2 * uv.y - 1) / sqrt(1.0 - 4 * sigma * uv.y * (uv.y - 1.0))
-		vertex.z = 1.0
-		vertices[i] = vertex.normalized()
-
-	var l_basis = Basis()
-
-	match face:
-		Patch.Face.RIGHT:
-			l_basis = Basis(Vector3(0, 1, 0), PI / 2.0)
-		Patch.Face.UP:
-			l_basis = Basis(Vector3(1, 0, 0), -PI / 2.0)
-		Patch.Face.BACK:
-			l_basis = Basis(Vector3(0, 1, 0), PI)
-		Patch.Face.LEFT:
-			l_basis = Basis(Vector3(0, 1, 0), -PI / 2.0)
-		Patch.Face.BOTTOM:
-			l_basis = Basis(Vector3(1, 0, 0), PI / 2.0)
-
-	var l_scale = Vector3.ONE / float(1)
-	l_basis = l_basis.scaled(l_scale)
-	#instance.transform.basis = l_basis
-
-	for i in range(vertices.size()):
-		uvs[i] = _direction_to_equirectangular_uv(l_basis * vertices[i])
-
-	var arrays = instance.mesh.surface_get_arrays(0)
-
-	for i in range(vertices.size()):
-		normals[i] = vertices[i]
-		vertices[i].z -= 1.0
-	arrays[Mesh.ARRAY_VERTEX] = vertices
-	arrays[Mesh.ARRAY_INDEX] = indices
-	arrays[Mesh.ARRAY_NORMAL] = normals
-	arrays[Mesh.ARRAY_TEX_UV] = uvs
-
-	var new_mesh = ArrayMesh.new()
-	new_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-
-	if material != null:
-		instance.set_surface_override_material(0, material)
-
-	instance.mesh = new_mesh
-
-	# Create a static body for collision
-	var static_body = StaticBody3D.new()
-	instance.add_child(static_body)
-	var collision_shape = CollisionShape3D.new()
-	var shape = new_mesh.create_trimesh_shape()
-	collision_shape.shape = shape
-	static_body.add_child(collision_shape)
-
-	var rotation_node = Node3D.new()
-	rotation_node.position = Vector3(0.0, 0.0, 1.0)
-	rotation_node.add_child(instance)
-
-	var wrapper_node = Node3D.new()
-	wrapper_node.add_child(rotation_node)
-	wrapper_node.transform.basis = l_basis
-
-	parent.add_child(wrapper_node)
-	if Engine.is_editor_hint():
-		rotation_node.owner = get_tree().edited_scene_root
-		wrapper_node.owner = get_tree().edited_scene_root
-		instance.owner = get_tree().edited_scene_root
-		static_body.owner = get_tree().edited_scene_root
-		collision_shape.owner = get_tree().edited_scene_root
+	instance._init_face(parent, face, level, x, y, u, v, material)
 
 
-func _direction_to_equirectangular_uv(direction: Vector3) -> Vector2:
-	if direction.is_zero_approx():
-		return Vector2.ZERO
-	var x = atan2(direction.x, direction.z) / (2.0 * PI) + 0.5
-	var y = 0.5 - asin(clampf(direction.y, -1.0, 1.0)) / PI
-	return Vector2(x, y)
-
-
+## Applies the current material to every generated mesh instance.
+##
+## This is intentionally a traversal instead of a rebuild. Material changes are
+## render-state updates; regenerating every patch mesh and collision shape would
+## add editor churn without changing geometry.
 func _apply_material() -> void:
 	if faces == null:
 		return
 
+	# Generated mesh instances are nested below patch and offset nodes, so walk
+	# the whole subtree instead of assuming a fixed child depth.
 	var nodes = [faces]
 	while !nodes.is_empty():
 		var node = nodes.pop_front()
