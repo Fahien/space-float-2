@@ -410,7 +410,7 @@ func get_editor_camera(viewport_index: int = 0) -> Camera3D:
 @export var lod_decision_cooldown := 0.25
 var _lod_cooldown_left := 0.0
 
-@export_range(0, 5, 1) var max_lod := 4
+@export_range(0, 5, 1) var max_lod := 5
 
 func get_leaf_basis() -> Basis:
 	var face_basis = Basis()
@@ -429,6 +429,7 @@ func get_leaf_basis() -> Basis:
 			face_basis = Basis(Vector3(1, 0, 0), PI / 2.0)
 	return face_basis
 
+
 func get_patch_center() -> Vector3:
 	# I can calculate the center from the patch parameters.
 	var center_direction = _vertex_from_uv(_transform_uv_to_patch_uv(Vector2(0.5, 0.5)))
@@ -437,12 +438,11 @@ func get_patch_center() -> Vector3:
 
 
 func _process(delta: float) -> void:
-	var camera = get_editor_camera()
+	var camera = get_viewport().get_camera_3d()
 	if camera == null:
-		return
-	camera = get_viewport().get_camera_3d()
-	if camera == null:
-		return
+		camera = get_editor_camera()
+		if camera == null:
+			return
 
 	_lod_cooldown_left = maxf(0.0, _lod_cooldown_left - delta)
 	if _lod_cooldown_left > 0.0:
@@ -451,9 +451,9 @@ func _process(delta: float) -> void:
 	var world_scale = global_transform.basis.get_scale().x
 	# If the distance from the patch to the camera is less than a threshold based on the current LOD, subdivide.
 	# Otherwise, if the patch is subdivided and the distance is greater than the threshold, join.
-	var patch_center = get_patch_center()
+	var patch_center = get_patch_center() * world_scale
 	var distance = patch_center.distance_to(camera.global_position)
-	var split_threshold = 1.0 / pow(2, lod) * world_scale
+	var split_threshold = get_face_width() * world_scale * 1.1
 	if lod < max_lod and _is_leaf:
 		if distance < split_threshold:
 			print("Subdividing patch at center ", patch_center, " LOD ", lod, " with distance ", distance)
@@ -462,7 +462,7 @@ func _process(delta: float) -> void:
 	if not _is_leaf:
 		var child = get_child(0) as Patch
 		if child != null and child._is_leaf:
-			var join_threshold = split_threshold * 2.0 # Hysteresis to prevent rapid toggling
+			var join_threshold = split_threshold * 1.25 # Hysteresis to prevent rapid toggling
 			if distance >= join_threshold:
 				print("Joining patch at LOD ", lod, " with distance ", distance)
 				join()

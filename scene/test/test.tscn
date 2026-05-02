@@ -81,7 +81,7 @@ target_follow_responsiveness = 10000.1
 target = NodePath("../Vessel2")
 
 [node name="Vessel2" parent="EarthGrid/Z1" unique_id=1777554015 instance=ExtResource("7_ra30r")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1938026854768395, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 0)
 mass_model = SubResource("Resource_vct8v")
 propulsion_model = SubResource("Resource_obuoi")
 
