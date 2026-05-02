@@ -52,6 +52,7 @@ enum Face {
 
 ## Button to trigger subdivision in the editor.
 @export_tool_button("Subdivide", "Callable") var subdivide_button = subdivide
+@export_tool_button("Join", "Callable") var join_button = join
 
 ## Source tessellation used to build the generated patch mesh.
 ##
@@ -125,7 +126,20 @@ enum Face {
 @export var material: Material
 
 
+@export var process: bool = true:
+	set(p_process):
+		process = p_process
+		set_process(p_process)
+
+
+@export var debug_vector: PackedScene = null
+
+
+var _is_leaf: bool = true
+
+
 func _ready() -> void:
+	set_process(true)
 	update_configuration_warnings()
 
 
@@ -206,31 +220,19 @@ func build():
 	var normals = seed_mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
 	var uvs = seed_mesh.surface_get_arrays(0)[Mesh.ARRAY_TEX_UV]
 
-	var face_width = get_face_width()
-
 	# Move seed UVs from local 0..1 tile space into this tile's location on the
 	# current cube face. `x`/`y` are the accumulated parent origin and `u`/`v`
 	# choose the child quadrant at this LOD.
 	for i in range(uvs.size()):
-		var uv = uvs[i]
-		uv.x = face_width * uv.x + float(u) * face_width + x
-		uv.y = face_width * uv.y + float(v) * face_width + y
-		uvs[i] = uv
+		uvs[i] = _transform_uv_to_patch_uv(uvs[i])
 
 	# Project face-space UVs onto the unit sphere. The algebraic sigmoid term
 	# softens the otherwise dense clustering caused by normalizing cube-face
 	# coordinates directly, giving a more even vertex distribution.
 	for i in range(vertices.size()):
-		var vertex = vertices[i]
-		var sigma = 0.87 * 0.87
-		var uv = uvs[i]
 		# Flip V so increasing face-space Y maps to the intended sphere-space
 		# orientation before the equirectangular conversion runs.
-		uv.y = 1.0 - uv.y
-		vertex.x = (2 * uv.x - 1) / sqrt(1.0 - 4 * sigma * uv.x * (uv.x - 1.0))
-		vertex.y = (2 * uv.y - 1) / sqrt(1.0 - 4 * sigma * uv.y * (uv.y - 1.0))
-		vertex.z = 1.0
-		vertices[i] = vertex.normalized()
+		vertices[i] = _vertex_from_uv(uvs[i])
 
 	# Rotate from the canonical front face to the requested cube face. The mesh
 	# is not rotated directly; this node's basis provides final placement and is
@@ -294,6 +296,12 @@ func build():
 	offset_node.add_child(instance)
 	add_child(offset_node)
 
+	var debug_instance = null
+	if debug_vector != null:
+		debug_instance = debug_vector.instantiate() as VectorMesh
+		debug_instance.vector = get_patch_center()
+		add_child(debug_instance)
+
 	# Generated editor children need ownership assigned or they will be visible
 	# in the scene tree but not saved with the edited scene.
 	if Engine.is_editor_hint():
@@ -301,6 +309,31 @@ func build():
 		instance.owner = get_tree().edited_scene_root
 		static_body.owner = get_tree().edited_scene_root
 		collision_shape.owner = get_tree().edited_scene_root
+		if debug_instance != null:
+			debug_instance.owner = get_tree().edited_scene_root
+
+
+func _transform_uv_to_patch_uv(uv: Vector2) -> Vector2:
+	# The seed mesh is authored in 0..1 UV space. The build step transforms
+	# those UVs into the appropriate face tile, but the original UVs are still
+	# needed to calculate the vertex positions from the face-space coordinates.
+	# This method reverses the face tile transform so the same UVs can be used
+	# for both purposes without storing two separate arrays.
+	var face_width = get_face_width()
+	var patch_uv = Vector2()
+	patch_uv.x = face_width * uv.x + float(u) * face_width + x
+	patch_uv.y = face_width * uv.y + float(v) * face_width + y
+	return patch_uv
+
+
+func _vertex_from_uv(uv: Vector2) -> Vector3:
+	var flipped_uv = Vector2(uv.x, 1.0 - uv.y)
+	var vertex = Vector3()
+	var sigma = 0.87 * 0.87
+	vertex.x = (2 * flipped_uv.x - 1) / sqrt(1.0 - 4 * sigma * flipped_uv.x * (flipped_uv.x - 1.0))
+	vertex.y = (2 * flipped_uv.y - 1) / sqrt(1.0 - 4 * sigma * flipped_uv.y * (flipped_uv.y - 1.0))
+	vertex.z = 1.0
+	return vertex.normalized()
 
 
 ## Converts a unit globe direction to equirectangular texture coordinates.
@@ -320,7 +353,7 @@ func subdivide() -> void:
 	_clear_children()
 
 	var next_level = lod + 1
-	var face_width = get_face_width() / 2.0
+	var face_width = get_face_width()
 
 	# Subdivision is a simple recursive instantiation of four child patches with
 	# the next LOD and the appropriate tile coordinates for each quadrant.
@@ -330,13 +363,14 @@ func subdivide() -> void:
 	# Instantiate the four child patches for the next LOD level. The parent
 	# tile's origin and quadrant offset are accumulated into the child tile's
 	# origin before the recursive call applies the child's own quadrant offset.
-	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 0, 0, material)
-	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 0, 1, material)
-	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 1, 0, material)
-	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 1, 1, material)
-	
+	Patch.new()._init_face(self , seed_mesh, face, next_level, next_x, next_y, 0, 0, material, debug_vector)
+	Patch.new()._init_face(self , seed_mesh, face, next_level, next_x, next_y, 0, 1, material, debug_vector)
+	Patch.new()._init_face(self , seed_mesh, face, next_level, next_x, next_y, 1, 0, material, debug_vector)
+	Patch.new()._init_face(self , seed_mesh, face, next_level, next_x, next_y, 1, 1, material, debug_vector)
+	_is_leaf = false
 
-func _init_face(p_parent: Node, p_seed_mesh: Mesh, p_face: Patch.Face, p_level: int = 0, p_x: float = 0.0, p_y: float = 0.0, p_u: int = 0, p_v: int = 0, p_material: Material = null) -> void:
+
+func _init_face(p_parent: Node, p_seed_mesh: Mesh, p_face: Patch.Face, p_level: int = 0, p_x: float = 0.0, p_y: float = 0.0, p_u: int = 0, p_v: int = 0, p_material: Material = null, p_debug_vector: PackedScene = null) -> void:
 	seed_mesh = p_seed_mesh
 	set_face(p_face)
 	set_lod(p_level)
@@ -345,10 +379,91 @@ func _init_face(p_parent: Node, p_seed_mesh: Mesh, p_face: Patch.Face, p_level: 
 	u = p_u
 	v = p_v
 	material = p_material
-
-	p_parent.add_child(self)
+	debug_vector = p_debug_vector.duplicate(true)
+	p_parent.add_child(self )
 	p_parent.basis = Basis()
 
 	if Engine.is_editor_hint():
 		owner = p_parent.get_tree().edited_scene_root
 	build()
+
+
+func join() -> void:
+	_clear_children()
+	build()
+	_is_leaf = true
+
+
+func get_editor_camera(viewport_index: int = 0) -> Camera3D:
+	if not Engine.is_editor_hint():
+		return null
+	if not Engine.has_singleton("EditorInterface"):
+		return null
+
+	var editor_interface := Engine.get_singleton("EditorInterface")
+	var viewport := editor_interface.get_editor_viewport_3d(viewport_index) as SubViewport
+	if viewport == null:
+		return null
+
+	return viewport.get_camera_3d()
+
+@export var lod_decision_cooldown := 0.25
+var _lod_cooldown_left := 0.0
+
+@export_range(0, 5, 1) var max_lod := 4
+
+func get_leaf_basis() -> Basis:
+	var face_basis = Basis()
+	match face:
+		Patch.Face.FRONT:
+			face_basis = Basis()
+		Patch.Face.RIGHT:
+			face_basis = Basis(Vector3(0, 1, 0), PI / 2.0)
+		Patch.Face.UP:
+			face_basis = Basis(Vector3(1, 0, 0), -PI / 2.0)
+		Patch.Face.BACK:
+			face_basis = Basis(Vector3(0, 1, 0), PI)
+		Patch.Face.LEFT:
+			face_basis = Basis(Vector3(0, 1, 0), -PI / 2.0)
+		Patch.Face.BOTTOM:
+			face_basis = Basis(Vector3(1, 0, 0), PI / 2.0)
+	return face_basis
+
+func get_patch_center() -> Vector3:
+	# I can calculate the center from the patch parameters.
+	var center_direction = _vertex_from_uv(_transform_uv_to_patch_uv(Vector2(0.5, 0.5)))
+	center_direction.y = center_direction.y
+	return get_leaf_basis() * center_direction
+
+
+func _process(delta: float) -> void:
+	var camera = get_editor_camera()
+	if camera == null:
+		return
+	camera = get_viewport().get_camera_3d()
+	if camera == null:
+		return
+
+	_lod_cooldown_left = maxf(0.0, _lod_cooldown_left - delta)
+	if _lod_cooldown_left > 0.0:
+		return
+
+	var world_scale = global_transform.basis.get_scale().x
+	# If the distance from the patch to the camera is less than a threshold based on the current LOD, subdivide.
+	# Otherwise, if the patch is subdivided and the distance is greater than the threshold, join.
+	var patch_center = get_patch_center()
+	var distance = patch_center.distance_to(camera.global_position)
+	var split_threshold = 1.0 / pow(2, lod) * world_scale
+	if lod < max_lod and _is_leaf:
+		if distance < split_threshold:
+			print("Subdividing patch at center ", patch_center, " LOD ", lod, " with distance ", distance)
+			subdivide()
+			_lod_cooldown_left = lod_decision_cooldown
+	if not _is_leaf:
+		var child = get_child(0) as Patch
+		if child != null and child._is_leaf:
+			var join_threshold = split_threshold * 2.0 # Hysteresis to prevent rapid toggling
+			if distance >= join_threshold:
+				print("Joining patch at LOD ", lod, " with distance ", distance)
+				join()
+				_lod_cooldown_left = lod_decision_cooldown

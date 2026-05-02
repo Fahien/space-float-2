@@ -64,8 +64,6 @@ radius = 6371000.0
 mu = 398600441800000.0
 
 [node name="Globe" parent="EarthGrid/EarthOrigin" unique_id=1410850832 instance=ExtResource("3_mih6t")]
-transform = Transform3D(3.749399456654644e-33, 6.123233995736766e-17, 1, -1, 6.123233995736766e-17, 0, -6.123233995736766e-17, -1, 6.123233995736766e-17, 0, 0, 0)
-lod = 3
 
 [node name="Z1" type="BigGrid3D" parent="EarthGrid" unique_id=980843861]
 cell_y = 6371

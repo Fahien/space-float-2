@@ -91,6 +91,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 ## The material pass covers any generated children that were serialized in the
 ## scene file or created by editor-time property setters before `_ready()`.
 func _ready() -> void:
+	set_process(true)
 	_apply_material()
 	update_configuration_warnings()
 
