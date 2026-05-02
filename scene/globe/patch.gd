@@ -50,6 +50,9 @@ enum Face {
 	COUNT = 6,
 }
 
+## Button to trigger subdivision in the editor.
+@export_tool_button("Subdivide", "Callable") var subdivide_button = subdivide
+
 ## Source tessellation used to build the generated patch mesh.
 ##
 ## The seed mesh is not displayed directly. Its surface-0 arrays are copied,
@@ -184,6 +187,9 @@ func _clear_children() -> void:
 ## - creates a new `StaticBody3D` with a trimesh collision shape below the mesh
 ## - applies `material` as a surface override when present
 func build():
+	if not is_inside_tree():
+		return
+
 	if seed_mesh == null:
 		push_error("Seed mesh is not assigned. Cannot build patch.")
 		return Basis()
@@ -324,13 +330,14 @@ func subdivide() -> void:
 	# Instantiate the four child patches for the next LOD level. The parent
 	# tile's origin and quadrant offset are accumulated into the child tile's
 	# origin before the recursive call applies the child's own quadrant offset.
-	Patch.new()._init_face(self, face, next_level, next_x, next_y, 0, 0, material)
-	Patch.new()._init_face(self, face, next_level, next_x, next_y, 0, 1, material)
-	Patch.new()._init_face(self, face, next_level, next_x, next_y, 1, 0, material)
-	Patch.new()._init_face(self, face, next_level, next_x, next_y, 1, 1, material)
+	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 0, 0, material)
+	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 0, 1, material)
+	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 1, 0, material)
+	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 1, 1, material)
 	
 
-func _init_face(p_parent: Node, p_face: Patch.Face, p_level: int = 0, p_x: float = 0.0, p_y: float = 0.0, p_u: int = 0, p_v: int = 0, p_material: Material = null) -> void:
+func _init_face(p_parent: Node, p_seed_mesh: Mesh, p_face: Patch.Face, p_level: int = 0, p_x: float = 0.0, p_y: float = 0.0, p_u: int = 0, p_v: int = 0, p_material: Material = null) -> void:
+	seed_mesh = p_seed_mesh
 	set_face(p_face)
 	set_lod(p_level)
 	x = p_x
@@ -338,7 +345,10 @@ func _init_face(p_parent: Node, p_face: Patch.Face, p_level: int = 0, p_x: float
 	u = p_u
 	v = p_v
 	material = p_material
-	build()
+
 	p_parent.add_child(self)
+	p_parent.basis = Basis()
+
 	if Engine.is_editor_hint():
 		owner = p_parent.get_tree().edited_scene_root
+	build()

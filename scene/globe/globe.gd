@@ -201,7 +201,7 @@ func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: floa
 
 	var instance = patch.instantiate() as Patch
 	assert(instance != null)
-	instance._init_face(parent, face, level, x, y, u, v, material)
+	instance._init_face(parent, instance.seed_mesh, face, level, x, y, u, v, material)
 
 
 ## Applies the current material to every generated mesh instance.
