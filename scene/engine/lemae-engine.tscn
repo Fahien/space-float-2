@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://d3uw88kymxrky"]
+
+[ext_resource type="Script" uid="uid://b45uh68xr7oil" path="res://scene/engine/engine-model.gd" id="1_kowjs"]
+[ext_resource type="PackedScene" uid="uid://xokdgimkf8l6" path="res://model/rocket_baseA.glb" id="1_yaa15"]
+[ext_resource type="Script" uid="uid://r13biy7i0iye" path="res://scene/selection/selectable-3d.gd" id="3_6gmbg"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_b5lh5"]
+height = 0.8
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_3hl4c"]
+radius = 1.0
+
+[node name="LemaeEngine" type="RigidBody3D" unique_id=464772022]
+mass = 100.0
+script = ExtResource("1_kowjs")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2083866638]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.39706622943049297, 0)
+shape = SubResource("CylinderShape3D_b5lh5")
+
+[node name="rocket_baseA2" parent="." unique_id=2057328868 instance=ExtResource("1_yaa15")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.1999999999970896, -1.5)
+
+[node name="Selectable3D" type="Area3D" parent="." unique_id=1484557443]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3999999999941792, 0)
+script = ExtResource("3_6gmbg")
+metadata/_custom_type_script = "uid://r13biy7i0iye"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Selectable3D" unique_id=695016002]
+shape = SubResource("SphereShape3D_3hl4c")

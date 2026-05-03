@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://b5vgoo4al0kpj"]
+
+[ext_resource type="Texture2D" uid="uid://c11pdoeo7i4fy" path="res://texture/milky-way.jpg" id="1_rqrpt"]
+[ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="2_kgaxx"]
+[ext_resource type="PackedScene" uid="uid://d3uw88kymxrky" path="res://scene/engine/lemae-engine.tscn" id="3_vsoa4"]
+[ext_resource type="PackedScene" uid="uid://b8gl2co6a5cp0" path="res://scene/selection/selection-view.tscn" id="4_77n7y"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_t0yu5"]
+panorama = ExtResource("1_rqrpt")
+energy_multiplier = 0.1
+
+[sub_resource type="Sky" id="Sky_dd6y4"]
+sky_material = SubResource("PanoramaSkyMaterial_t0yu5")
+
+[sub_resource type="Environment" id="Environment_q3keq"]
+background_mode = 2
+sky = SubResource("Sky_dd6y4")
+tonemap_mode = 2
+glow_enabled = true
+
+[node name="Empty" type="BigSpaceRoot3D" unique_id=2026111574]
+floating_origin_path = NodePath("BigGrid3D/CameraOrbitRoot")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1064335943]
+transform = Transform3D(1, 0, 0, 0, 0.8400917202106111, 0.5424443765341996, 0, -0.5424443765341996, 0.8400917202106111, 0, 5.940803546842095, -8.881784e-16)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1385266347]
+environment = SubResource("Environment_q3keq")
+
+[node name="BigGrid3D" type="BigGrid3D" parent="." unique_id=1302037208]
+
+[node name="CameraOrbitRoot" parent="BigGrid3D" unique_id=188560390 instance=ExtResource("2_kgaxx")]
+
+[node name="LemaeEngine" parent="BigGrid3D" unique_id=464772022 instance=ExtResource("3_vsoa4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 0)
+
+[node name="SelectionView" parent="BigGrid3D" unique_id=423019397 instance=ExtResource("4_77n7y")]
