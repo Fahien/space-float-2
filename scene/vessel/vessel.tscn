@@ -53,6 +53,7 @@ albedo_color = Color(0, 0.42745098, 1, 1)
 [node name="Vessel" type="RigidBody3D" unique_id=1777554015]
 mass = 1000.0
 gravity_scale = 0.0
+continuous_cd = true
 script = ExtResource("1_2jcqn")
 
 [node name="ThrusterShape" type="CollisionShape3D" parent="." unique_id=1336926297]

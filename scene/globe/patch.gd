@@ -151,6 +151,15 @@ enum Face {
 @export var debug_vector: PackedScene = null
 
 
+## Whether generated terrain triangles should collide from their back side too.
+##
+## A globe patch is a zero-thickness concave trimesh. Enabling backfaces does
+## not replace continuous collision detection on fast bodies, but it makes a
+## missed terrain contact less likely to become an unrecoverable fall through
+## the hollow surface.
+@export var collision_backface_enabled: bool = true
+
+
 ## Local radius multiplier for generated geometry.
 ##
 ## Vertex normals and texture lookup stay in unit-sphere space. Only final
@@ -319,7 +328,8 @@ func build():
 	instance.add_child(static_body)
 
 	var collision_shape = CollisionShape3D.new()
-	var shape = mesh.create_trimesh_shape()
+	var shape: ConcavePolygonShape3D = mesh.create_trimesh_shape()
+	shape.backface_collision = collision_backface_enabled
 	collision_shape.shape = shape
 	static_body.add_child(collision_shape)
 
