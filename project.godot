@@ -72,3 +72,4 @@ jolt_physics_3d/limits/max_linear_velocity=50000.0
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+textures/vram_compression/import_etc2_astc=true

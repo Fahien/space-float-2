@@ -26,9 +26,6 @@ glow_enabled = true
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_dd6y4"]
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_dd6y4"]
-size = Vector2(10, 10)
-
 [sub_resource type="Resource" id="Resource_vct8v"]
 script = ExtResource("9_tfij0")
 
@@ -72,10 +69,6 @@ cell_y = 6371
 [node name="MeshInstance3D" type="MeshInstance3D" parent="EarthGrid/Z1" unique_id=1321334797]
 transform = Transform3D(1, 0, 0, 0, 10, 0, 0, 0, 1, 5, 0, 0)
 mesh = SubResource("CylinderMesh_dd6y4")
-
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="EarthGrid/Z1" unique_id=110811138]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.880000000004657, 0, 0)
-mesh = SubResource("PlaneMesh_dd6y4")
 
 [node name="CameraOrbitRoot" parent="EarthGrid/Z1" unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("2_ppyta")]
 target_follow_responsiveness = 10000.1
