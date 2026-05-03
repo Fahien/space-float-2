@@ -126,20 +126,52 @@ enum Face {
 @export var material: Material
 
 
+## Whether this patch evaluates camera-dependent LOD changes every frame.
 @export var process: bool = true:
 	set(p_process):
 		process = p_process
 		set_process(p_process)
 
 
+## Minimum time between split/join decisions for this patch.
+##
+## The cooldown prevents a patch near the distance threshold from repeatedly
+## rebuilding its subtree in consecutive frames.
+@export var lod_decision_cooldown := 0.25
+
+
+## Deepest dynamic LOD this patch can create.
+##
+## Code-created children may exceed the editor range on `lod`; this value is the
+## runtime guard used by `_process()` before calling `subdivide()`.
+@export_range(0, 10, 1) var max_lod := 10
+
+
+## Optional debug scene used to draw this patch's radial center direction.
 @export var debug_vector: PackedScene = null
 
 
+## Local radius multiplier for generated geometry.
+##
+## Vertex normals and texture lookup stay in unit-sphere space. Only final
+## vertex positions and the matching +Z offset are scaled.
+@export_range(1.0, 1000.0, 1.0) var geometry_scale: float = 1.0:
+	set(p_geometry_scale):
+		geometry_scale = p_geometry_scale
+		build()
+
+
+## Remaining time before this patch can change LOD again.
+var _lod_cooldown_left := 0.0
+
+## True while this patch owns generated mesh/collision children directly.
+##
+## A non-leaf patch has replaced its own mesh with four child `Patch` nodes.
 var _is_leaf: bool = true
 
 
 func _ready() -> void:
-	set_process(true)
+	set_process(process)
 	update_configuration_warnings()
 
 
@@ -191,8 +223,9 @@ func _clear_children() -> void:
 ## Rebuilds render and collision geometry for the current tile configuration.
 ##
 ## The method reads the seed mesh, transforms its UVs into this patch's face
-## region, projects the resulting square tile onto the unit sphere, and stores
-## the generated data on a fresh `ArrayMesh`.
+## region, projects the resulting square tile onto the unit sphere, scales the
+## final vertex positions by `geometry_scale`, and stores the generated data on
+## a fresh `ArrayMesh`.
 ##
 ## Side effects:
 ## - updates this node's transform basis for the selected cube face
@@ -258,12 +291,14 @@ func build():
 
 	var arrays = seed_mesh.surface_get_arrays(0)
 
-	# Normals remain radial unit directions. Vertex positions are shifted back
-	# by one local Z unit because the generated offset child translates the mesh
-	# by +Z before this patch root's face rotation is applied.
+	# Normals remain radial unit directions. Vertex positions are scaled into
+	# local globe units, then shifted back by the same radius because the
+	# generated offset child translates the mesh forward before this patch root's
+	# face rotation is applied.
 	for i in range(vertices.size()):
 		normals[i] = vertices[i]
-		vertices[i].z -= 1.0
+		vertices[i] *= geometry_scale
+		vertices[i].z -= geometry_scale
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_INDEX] = indices
 	arrays[Mesh.ARRAY_NORMAL] = normals
@@ -288,11 +323,11 @@ func build():
 	collision_shape.shape = shape
 	static_body.add_child(collision_shape)
 
-	# Vertices are shifted one unit back along local Z.
-	# Translating the patch parent by +Z restores the unit-radius front-face
-	# placement before this patch root rotates that front face into position.
+	# Translating by the same amount used for the local Z shift restores the
+	# scaled front-face placement before this patch root rotates it into the
+	# selected cube-face orientation.
 	var offset_node = Node3D.new()
-	offset_node.position = Vector3(0.0, 0.0, 1.0)
+	offset_node.position = Vector3(0.0, 0.0, geometry_scale)
 	offset_node.add_child(instance)
 	add_child(offset_node)
 
@@ -349,6 +384,11 @@ func _direction_to_equirectangular_uv(direction: Vector3) -> Vector2:
 	return Vector2(l_x, l_y)
 
 
+## Replaces this leaf patch's generated mesh with four child patches.
+##
+## Children inherit the same face, material, debug-vector scene, and geometry
+## scale. Each child receives an accumulated face-space origin plus its own
+## quadrant selector.
 func subdivide() -> void:
 	_clear_children()
 
@@ -363,14 +403,19 @@ func subdivide() -> void:
 	# Instantiate the four child patches for the next LOD level. The parent
 	# tile's origin and quadrant offset are accumulated into the child tile's
 	# origin before the recursive call applies the child's own quadrant offset.
-	Patch.new()._init_face(self , seed_mesh, face, next_level, next_x, next_y, 0, 0, material, debug_vector)
-	Patch.new()._init_face(self , seed_mesh, face, next_level, next_x, next_y, 0, 1, material, debug_vector)
-	Patch.new()._init_face(self , seed_mesh, face, next_level, next_x, next_y, 1, 0, material, debug_vector)
-	Patch.new()._init_face(self , seed_mesh, face, next_level, next_x, next_y, 1, 1, material, debug_vector)
+	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 0, 0, material, debug_vector, geometry_scale)
+	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 0, 1, material, debug_vector, geometry_scale)
+	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 1, 0, material, debug_vector, geometry_scale)
+	Patch.new()._init_face(self, seed_mesh, face, next_level, next_x, next_y, 1, 1, material, debug_vector, geometry_scale)
 	_is_leaf = false
 
 
-func _init_face(p_parent: Node, p_seed_mesh: Mesh, p_face: Patch.Face, p_level: int = 0, p_x: float = 0.0, p_y: float = 0.0, p_u: int = 0, p_v: int = 0, p_material: Material = null, p_debug_vector: PackedScene = null) -> void:
+## Configures and attaches a patch created by `Globe` or by parent subdivision.
+##
+## Property setters may try to build before the node enters the tree; the final
+## explicit `build()` call below is the one that creates render and collision
+## children after all inputs are assigned.
+func _init_face(p_parent: Node, p_seed_mesh: Mesh, p_face: Patch.Face, p_level: int = 0, p_x: float = 0.0, p_y: float = 0.0, p_u: int = 0, p_v: int = 0, p_material: Material = null, p_debug_vector: PackedScene = null, p_geometry_scale: float = 1.0) -> void:
 	seed_mesh = p_seed_mesh
 	set_face(p_face)
 	set_lod(p_level)
@@ -379,15 +424,23 @@ func _init_face(p_parent: Node, p_seed_mesh: Mesh, p_face: Patch.Face, p_level: 
 	u = p_u
 	v = p_v
 	material = p_material
-	debug_vector = p_debug_vector.duplicate(true)
-	p_parent.add_child(self )
-	p_parent.basis = Basis()
+	if p_debug_vector != null:
+		debug_vector = p_debug_vector.duplicate(true)
+	geometry_scale = p_geometry_scale
+	p_parent.add_child(self)
+
+	var parent_patch := p_parent as Patch
+	if parent_patch != null:
+		# Once a patch becomes a branch, its children carry the cube-face basis.
+		# Resetting the branch basis avoids applying that face rotation twice.
+		parent_patch.basis = Basis()
 
 	if Engine.is_editor_hint():
 		owner = p_parent.get_tree().edited_scene_root
 	build()
 
 
+## Collapses a branch patch back into one generated mesh/collision leaf.
 func join() -> void:
 	_clear_children()
 	build()
@@ -407,11 +460,8 @@ func get_editor_camera(viewport_index: int = 0) -> Camera3D:
 
 	return viewport.get_camera_3d()
 
-@export var lod_decision_cooldown := 0.25
-var _lod_cooldown_left := 0.0
 
-@export_range(0, 5, 1) var max_lod := 5
-
+## Returns the cube-face basis that positions this tile's unit-sphere direction.
 func get_leaf_basis() -> Basis:
 	var face_basis = Basis()
 	match face:
@@ -430,11 +480,27 @@ func get_leaf_basis() -> Basis:
 	return face_basis
 
 
+## Returns this tile's radial center direction in globe-local space.
 func get_patch_center() -> Vector3:
-	# I can calculate the center from the patch parameters.
 	var center_direction = _vertex_from_uv(_transform_uv_to_patch_uv(Vector2(0.5, 0.5)))
-	center_direction.y = center_direction.y
 	return get_leaf_basis() * center_direction
+
+
+## Returns true only when every direct child patch has collapsed to a leaf.
+##
+## Non-patch children can remain queued for deletion immediately after a split,
+## so the check filters them out instead of relying on child order.
+func _direct_child_patches_are_leaves() -> bool:
+	var child_patch_count := 0
+	for child in get_children():
+		var child_patch := child as Patch
+		if child_patch == null:
+			continue
+		child_patch_count += 1
+		if not child_patch._is_leaf:
+			return false
+
+	return child_patch_count > 0
 
 
 func _process(delta: float) -> void:
@@ -448,21 +514,23 @@ func _process(delta: float) -> void:
 	if _lod_cooldown_left > 0.0:
 		return
 
-	var world_scale = global_transform.basis.get_scale().x
-	# If the distance from the patch to the camera is less than a threshold based on the current LOD, subdivide.
-	# Otherwise, if the patch is subdivided and the distance is greater than the threshold, join.
-	var patch_center = get_patch_center() * world_scale
+	# Convert unit-sphere face width into world units. `geometry_scale` is baked
+	# into vertices rather than the node basis, so it is applied explicitly here.
+	var world_scale = global_transform.basis.get_scale().x * geometry_scale
+	var patch_center = global_transform.origin + get_patch_center() * world_scale
 	var distance = patch_center.distance_to(camera.global_position)
 	var split_threshold = get_face_width() * world_scale * 1.1
+
 	if lod < max_lod and _is_leaf:
 		if distance < split_threshold:
 			print("Subdividing patch at center ", patch_center, " LOD ", lod, " with distance ", distance)
 			subdivide()
 			_lod_cooldown_left = lod_decision_cooldown
+
 	if not _is_leaf:
-		var child = get_child(0) as Patch
-		if child != null and child._is_leaf:
-			var join_threshold = split_threshold * 1.25 # Hysteresis to prevent rapid toggling
+		if _direct_child_patches_are_leaves():
+			# Hysteresis keeps the patch from joining immediately after a split.
+			var join_threshold = split_threshold * 1.25
 			if distance >= join_threshold:
 				print("Joining patch at LOD ", lod, " with distance ", distance)
 				join()

@@ -5,26 +5,28 @@ extends Node3D
 ##
 ## `Globe` owns the scene-level structure for a planet mesh, but deliberately
 ## leaves the per-tile mesh generation to `Patch`. Its job is to:
-## - instantiate one `Patch` scene for each visible cube-face tile
-## - walk a fixed quadtree from LOD 0 down to the requested leaf `lod`
-## - pass face, tile-origin, quadrant, LOD, and material inputs into each patch
+## - instantiate one root `Patch` scene for each cube face
+## - pass face, tile-origin, quadrant, material, and scale inputs into each patch
 ## - let each patch generate its local render/collision children and apply its
 ##   own cube-face transform
+## - let patches split and join their own runtime quadtree nodes
 ## - keep editor-generated children owned by the edited scene so the globe can
 ##   be previewed and saved from the inspector
 ##
 ## Coordinate contract:
 ## - every cube face is addressed in normalized 0..1 UV space
-## - LOD 0 is a single tile covering the whole face
-## - each deeper LOD splits a tile into four quadrants
-## - `x`/`y` passed to `Patch` are the accumulated parent-tile origin
-## - `u`/`v` passed to `Patch` select the child quadrant inside that origin
+## - each root patch starts at LOD 0 and covers one whole cube face
+## - child patches accumulate `x`/`y` origins and `u`/`v` quadrants while
+##   subdividing from their parent patch
+## - `geometry_scale` scales patch-local sphere geometry before any parent
+##   scene transform is applied
 ##
 ## Generated subtree:
 ## - all generated face content lives below the authored `Faces` child node
-## - branch nodes named `Level_*` exist only to group quadtree levels
-## - leaf nodes are `Patch` roots with generated mesh/collision children
-## - rebuilding clears and recreates this generated subtree
+## - root face nodes are `Patch` instances
+## - leaf patches own generated mesh/collision children
+## - branch patches own four child patches instead of generated mesh
+## - rebuilding clears and recreates the root face nodes
 class_name Globe
 
 ## Packed scene used for each generated globe tile.
@@ -41,17 +43,6 @@ var patch: PackedScene = null:
 		update_configuration_warnings()
 		_build()
 
-## Target quadtree leaf level for every cube face.
-##
-## LOD 0 creates six leaf patches, one for each cube face. Each increment
-## subdivides every face tile into four children, producing `6 * 4^lod` leaf
-## patches. This node currently builds a uniform LOD across the whole globe;
-## there is no camera-dependent or per-face refinement here.
-@export
-var lod := 0:
-	set(p_lod):
-		lod = p_lod
-		_build()
 
 ## Shared material applied to generated patch meshes.
 ##
@@ -63,6 +54,18 @@ var material: StandardMaterial3D = null:
 	set(p_material):
 		material = p_material
 		_apply_material()
+
+
+## Multiplier applied to generated patch geometry before parent transforms.
+##
+## This keeps the surrounding scene free to use coarse origin/grid scale while
+## `Patch` still builds meshes around a stable local sphere radius.
+@export_range(1.0, 1000.0, 1.0)
+var geometry_scale := 1.0:
+	set(p_geometry_scale):
+		geometry_scale = p_geometry_scale
+		_build()
+
 
 ## Authored container for generated face nodes.
 ##
@@ -88,9 +91,11 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 ## Finalizes editor/runtime setup once child paths are available.
 ##
-## The material pass covers any generated children that were serialized in the
-## scene file or created by editor-time property setters before `_ready()`.
+## The initial build is delayed until `_ready()` because the authored `Faces`
+## child is resolved with `@onready`. The material pass covers any generated
+## children serialized in the scene file or created by editor-time setters.
 func _ready() -> void:
+	_build()
 	set_process(true)
 	_apply_material()
 	update_configuration_warnings()
@@ -98,10 +103,10 @@ func _ready() -> void:
 
 ## Removes all generated face content from the `Faces` container.
 ##
-## Rebuilds are destructive by design: the quadtree shape, tile coordinates,
-## face transforms, and patch meshes are all derived output from the current
-## exported properties. Detaching children immediately keeps the editor tree in
-## sync, while `queue_free()` lets Godot dispose of them safely.
+## Rebuilds are destructive by design: the root face nodes and their patch-local
+## descendants are derived output from the current exported properties.
+## Detaching children immediately keeps the editor tree in sync, while
+## `queue_free()` lets Godot dispose of them safely.
 func _clear_faces() -> void:
 	for child in faces.get_children():
 		faces.remove_child(child)
@@ -112,23 +117,21 @@ func _clear_faces() -> void:
 ##
 ## This method is called from property setters in tool mode, so it must tolerate
 ## being invoked before the node is ready. Once inside the tree, it clears stale
-## generated output first, then creates all six cube faces at the requested LOD.
+## generated output first, then creates the six root cube-face patches.
 ##
 ## `Patch.build()` owns mesh and collision generation. `Globe` only owns the
-## scene hierarchy and the high-level face/quadtree traversal.
+## root face hierarchy and scene-level configuration shared by every patch.
 func _build() -> void:
 	if not is_inside_tree():
+		return
+
+	if faces == null:
 		return
 
 	_clear_faces()
 
 	if patch == null:
 		return
-
-	if faces == null:
-		return
-
-	var instances = []
 
 	# Build order is kept explicit so the six serialized face values are easy
 	# to compare with `Patch.Face` and with generated scene output.
@@ -139,31 +142,18 @@ func _build() -> void:
 	_instantiate_face(faces, Patch.Face.LEFT)
 	_instantiate_face(faces, Patch.Face.BOTTOM)
 	
-	for instance in instances:
-		faces.add_child(instance)
-		if Engine.is_editor_hint():
-			instance.owner = get_tree().edited_scene_root
 
-
-## Creates one quadtree branch or one leaf patch for a cube face.
+## Creates one root patch for a cube face.
 ##
 ## Parameters:
-## - `parent`: node that receives the branch node or leaf patch generated here
+## - `parent`: node that receives the patch generated here
 ## - `face`: cube face being populated
-## - `level`: current quadtree depth, where 0 covers a whole face
+## - `level`: quadtree depth, where 0 covers a whole face
 ## - `x`/`y`: accumulated parent-tile origin in normalized face UV space
 ## - `u`/`v`: quadrant of the current tile inside its parent, each 0 or 1
 ##
-## Branch behavior:
-## - when `level` is lower than `lod`, this creates a grouping node and recurses
-##   into the four child quadrants
-## - child origins are advanced by this level's tile width before the next
-##   recursive step
-##
-## Leaf behavior:
-## - when `level` equals `lod`, this instantiates `patch` as `Patch`
-## - all patch inputs are passed to `Patch._init_face()`, which applies the
-##   face transform and rebuilds the patch-local generated children
+## `Globe` only creates LOD 0 roots. Runtime quadtree refinement happens inside
+## each `Patch`, which calls `_init_face()` directly for its child patches.
 func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: float = 0.0, y: float = 0.0, u: int = 0, v: int = 0) -> void:
 	if patch == null:
 		push_error("Patch is not assigned. Cannot instantiate face.")
@@ -173,36 +163,9 @@ func _instantiate_face(parent: Node3D, face: Patch.Face, level: int = 0, x: floa
 		push_error("Invalid LOD level. Cannot instantiate face.")
 		return
 
-	# At each level, `face_width` describes the current tile size in normalized
-	# face space. Child tile origins advance by this amount before their own
-	# next-level width is computed.
-	var face_width = 1.0 / pow(2, level)
-	
-	if level != lod:
-		var level_node = Node3D.new()
-		level_node.name = "Level_%d_%d_%d" % [level, u, v]
-		parent.add_child(level_node)
-		if Engine.is_editor_hint():
-			level_node.owner = get_tree().edited_scene_root
-		
-		var next_level = level + 1
-
-		# `x`/`y` are the parent origin. `u`/`v` select which quadrant this node
-		# represents at the current level, so the child origin is offset before
-		# the recursion chooses each child's own quadrant.
-		var next_x = x + u * face_width
-		var next_y = y + v * face_width
-
-		_instantiate_face(level_node, face, next_level, next_x, next_y, 0, 0)
-		_instantiate_face(level_node, face, next_level, next_x, next_y, 0, 1)
-		_instantiate_face(level_node, face, next_level, next_x, next_y, 1, 0)
-		_instantiate_face(level_node, face, next_level, next_x, next_y, 1, 1)
-
-		return
-
 	var instance = patch.instantiate() as Patch
 	assert(instance != null)
-	instance._init_face(parent, instance.seed_mesh, face, level, x, y, u, v, material)
+	instance._init_face(parent, instance.seed_mesh, face, level, x, y, u, v, material, null, geometry_scale)
 
 
 ## Applies the current material to every generated mesh instance.
