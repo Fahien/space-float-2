@@ -144,7 +144,7 @@ enum Face {
 ##
 ## Code-created children may exceed the editor range on `lod`; this value is the
 ## runtime guard used by `_process()` before calling `subdivide()`.
-@export_range(0, 10, 1) var max_lod := 10
+@export_range(0, 16, 1) var max_lod := 16
 
 
 ## Optional debug scene used to draw this patch's radial center direction.
@@ -164,7 +164,7 @@ enum Face {
 ##
 ## Vertex normals and texture lookup stay in unit-sphere space. Only final
 ## vertex positions and the matching +Z offset are scaled.
-@export_range(1.0, 1000.0, 1.0) var geometry_scale: float = 1.0:
+@export_range(1.0, 10000.0, 10.0) var geometry_scale: float = 1.0:
 	set(p_geometry_scale):
 		geometry_scale = p_geometry_scale
 		build()
