@@ -16,6 +16,7 @@ sky_material = SubResource("PanoramaSkyMaterial_t0yu5")
 background_mode = 2
 sky = SubResource("Sky_dd6y4")
 tonemap_mode = 2
+glow_enabled = true
 
 [node name="Empty" type="BigSpaceRoot3D" unique_id=2026111574]
 cell_edge_length = 10.000001

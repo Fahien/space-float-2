@@ -16,19 +16,42 @@ radius = 1.0
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_onl8b"]
 render_priority = 0
 shader = ExtResource("5_2cl03")
-shader_parameter/fade_power = 4.00000018674012
-shader_parameter/uv_middle_point = 0.5
+shader_parameter/fade_power = 2.00000009174012
+shader_parameter/uv_middle_point = 0.15
 shader_parameter/noise_texture = ExtResource("6_onl8b")
-shader_parameter/noise_direction = Vector2(0, -2.05)
-shader_parameter/noise_scale = Vector2(1, -0.21)
-shader_parameter/noise_strength = 0.5
+shader_parameter/noise_direction = Vector2(0, -2)
+shader_parameter/noise_scale = Vector2(1, -0.5)
+shader_parameter/noise_strength = 0.50000002375
 shader_parameter/primary_color = Color(0, 0.8, 1, 1)
-shader_parameter/neon_intensity = 4.0
+shader_parameter/neon_intensity = 8.0000003325
+shader_parameter/fresnel_power = 0.10000000149012
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_iny3f"]
 material = SubResource("ShaderMaterial_onl8b")
 top_radius = 0.25
 bottom_radius = 0.0
+rings = 0
+cap_top = false
+cap_bottom = false
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2cl03"]
+render_priority = 0
+shader = ExtResource("5_2cl03")
+shader_parameter/fade_power = 0.10000000149012
+shader_parameter/uv_middle_point = 0.2
+shader_parameter/noise_texture = ExtResource("6_onl8b")
+shader_parameter/noise_direction = Vector2(0, -2)
+shader_parameter/noise_scale = Vector2(1, -0.5)
+shader_parameter/noise_strength = 1.0000000475
+shader_parameter/primary_color = Color(0, 0.8, 1, 1)
+shader_parameter/neon_intensity = 4.000000142499999
+shader_parameter/fresnel_power = 1.00000004424012
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_onl8b"]
+material = SubResource("ShaderMaterial_2cl03")
+top_radius = 0.25
+bottom_radius = 0.0
+height = 1.0
 rings = 0
 cap_top = false
 cap_bottom = false
@@ -61,3 +84,7 @@ engine_model = NodePath("..")
 [node name="Plume" type="MeshInstance3D" parent="." unique_id=1225193478]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 mesh = SubResource("CylinderMesh_iny3f")
+
+[node name="Inner" type="MeshInstance3D" parent="Plume" unique_id=232356445]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("CylinderMesh_onl8b")
