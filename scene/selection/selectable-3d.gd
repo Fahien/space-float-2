@@ -5,11 +5,18 @@ extends Area3D
 @export
 var anchor: Node3D = null
 
+@export
+var command_receiver: CommandReceiver = CommandReceiver.new()
+
 
 func get_selection_anchor() -> Node3D:
 	if anchor != null:
 		return anchor
 	return self
+
+
+func get_command_receiver() -> CommandReceiver:
+	return command_receiver
 
 
 func get_selection_radius() -> float:

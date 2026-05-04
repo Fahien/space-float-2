@@ -6,7 +6,7 @@ signal selection_changed(current: Selectable3D)
 
 @export var ray_length: float = 100_000.0
 
-@export_flags_3d_physics var selection_collision_mask: int
+@export_flags_3d_physics var selection_collision_mask: int = 0xffffffff
 
 
 func _unhandled_input(p_event: InputEvent) -> void:
@@ -16,7 +16,6 @@ func _unhandled_input(p_event: InputEvent) -> void:
 
 
 func _pick(p_position_in_screen_space: Vector2) -> void:
-	print("Picking at: ", p_position_in_screen_space)
 	var viewport := get_viewport()
 	if viewport == null:
 		return
@@ -32,21 +31,26 @@ func _pick(p_position_in_screen_space: Vector2) -> void:
 	var to := from + camera.project_ray_normal(p_position_in_screen_space) * ray_length
 
 	var query := PhysicsRayQueryParameters3D.create(from, to)
+	query.collision_mask = selection_collision_mask
 	query.collide_with_areas = true
-	query.collide_with_bodies = true
+	query.collide_with_bodies = false
 
 	var result := viewport.world_3d.direct_space_state.intersect_ray(query)
 	if result.is_empty():
 		clear_selection()
 		return
-	
+
 	var collider := result["collider"] as Node
 	var selectable := _find_selectable(collider)
 	if selectable == null:
 		clear_selection()
 		return
-	
+
 	select(selectable)
+
+
+func has_selection() -> bool:
+	return current != null
 
 
 func clear_selection() -> void:
@@ -57,8 +61,9 @@ func select(selectable: Selectable3D) -> void:
 	if current == selectable:
 		return
 
-	print("Selected: ", selectable)
-	selection_changed.emit(selectable)
+	current = selectable
+	print("Selected: ", current)
+	selection_changed.emit(current)
 
 
 ## Walk up the node tree to find a Selectable3D.
