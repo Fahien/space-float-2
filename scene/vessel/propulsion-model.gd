@@ -1,12 +1,13 @@
-## Pure engine-performance model for the standalone launch harness.
+## Pure propulsion-performance model shared by scene adapters.
 ##
-## This class maps throttle to scalar outputs only:
+## This class maps throttle to scalar outputs:
 ## - thrust magnitude in Newtons
 ## - propellant flow in kg/s
+## - bounded gimbal target angles
 ##
-## It deliberately does not know about scene nodes, thruster transforms, or
-## world-space force vectors. Those stay in `VesselModel`, which is the
-## Godot-facing rigid-body adapter.
+## It deliberately does not know about scene nodes, propellant storage,
+## thruster transforms, or world-space force vectors. Those stay in adapters
+## such as `VesselState` / `VesselModel` and `EngineModel`.
 
 class_name PropulsionModel
 
@@ -15,11 +16,11 @@ extends Resource
 ## Maximum engine thrust at full throttle, in Newtons.
 ##
 ## Editor role:
-## - primary scalar tuning knob for the vessel's propulsion authority
+## - primary scalar tuning knob for propulsion authority
 ##
 ## Runtime role:
-## - read by `VesselState` to convert throttle into requested force magnitude
-## - applied in scene space later by `VesselModel`
+## - read by scene adapters to convert throttle into requested force magnitude
+## - applied in scene space later by the owning rigid-body adapter
 ##
 ## Interaction:
 ## - does not set burn duration by itself; pair with
@@ -32,33 +33,38 @@ extends Resource
 ## duration and mass depletion, not direction or mounting.
 @export var max_propellant_flow_kg_per_s := 1.0
 
-## Maximum nozzle deflection around the vessel-local pitch axis, in degrees.
+## Maximum nozzle deflection around the adapter-local pitch axis, in degrees.
 ##
 ## Frame:
-## - vessel-local actuator space
+## - adapter-local actuator space
 ##
 ## Runtime role:
-## - converted to radians and used by `VesselState` to clamp pitch commands
-## - mirrored visually by the render-only thruster pivot
+## - converted to radians and used to clamp pitch commands
+## - mirrored visually by render-only thruster adapters when present
 @export_range(0.0, 3000.0, 1.0) var max_gimbal_pitch_degrees := 5.0
 
-## Maximum nozzle deflection around the vessel-local yaw axis, in degrees.
+## Maximum nozzle deflection around the adapter-local yaw axis, in degrees.
 ##
 ## This is independent from pitch so asymmetric actuator limits can be authored
 ## later without changing the contract.
 @export_range(0.0, 3000.0, 1.0) var max_gimbal_yaw_degrees := 5.0
 
+## Optional roll command limit, in degrees.
+##
+## Rolling around the thrust axis does not redirect a single engine's thrust.
+## `EngineModel` ignores this axis; the standalone vessel harness still uses it
+## for its torque-control prototype.
 @export_range(0.0, 3000.0, 1.0) var max_gimbal_roll_degrees := 0.0
 
-## Maximum actuator slew rate for both gimbal axes, in degrees per second.
+## Maximum actuator slew rate for configured gimbal axes, in degrees per second.
 ##
 ## Why it is exposed:
 ## - the harness wants physical thrust redirection to lag behind command input
 ##   instead of snapping instantly
 ##
 ## Runtime role:
-## - used by `VesselState.resolve_gimbal_step(...)`
-## - affects both simulation thrust direction and the mirrored render exhaust
+## - used by adapters that slew from command input toward target gimbal angles
+## - affects simulation thrust direction and mirrored render exhaust where used
 ##
 ## Safety:
 ## - safe to author in the editor
@@ -78,7 +84,7 @@ func get_propellant_flow(throttle: float) -> float:
 	return max_propellant_flow_kg_per_s * clampf(throttle, 0.0, 1.0)
 
 
-## Returns the configured gimbal limits in radians for pitch and yaw.
+## Returns the configured gimbal limits in radians for pitch, yaw, and roll.
 func get_gimbal_limit_radians() -> Vector3:
 	return Vector3(
 		deg_to_rad(maxf(max_gimbal_pitch_degrees, 0.0)),

@@ -22,4 +22,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 
 func receive_command(command: Command) -> void:
-	engine_model.throttle = command.throttle
+	if engine_model == null:
+		return
+	if command is ThrottleCommand:
+		engine_model.set_throttle(command.throttle)

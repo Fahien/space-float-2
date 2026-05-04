@@ -25,6 +25,9 @@ func _pick(p_position_in_screen_space: Vector2) -> void:
 	if camera == null:
 		return
 
+	if has_selection():
+		return
+
 	# Ray origin in world space.
 	var from := camera.project_ray_origin(p_position_in_screen_space)
 	# Ray direction in world space.
