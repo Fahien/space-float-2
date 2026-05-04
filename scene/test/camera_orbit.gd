@@ -60,6 +60,8 @@ func _ready() -> void:
 	target_pitch = pitch_pivot.rotation.x
 	target_zoom = spring_arm.spring_length
 
+	SelectionSystem.selection_changed.connect(_on_selection_changed)
+
 
 func _ensure_explicit_spring_arm_shape() -> void:
 	if spring_arm.shape != null:
@@ -158,3 +160,7 @@ func unproject_position(pos: Vector3) -> Vector2:
 
 func is_position_behind(pos: Vector3) -> bool:
 	return camera.is_position_behind(pos)
+
+
+func _on_selection_changed(selection: Node3D) -> void:
+	set_target(selection)
