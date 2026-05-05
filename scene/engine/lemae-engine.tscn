@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://xokdgimkf8l6" path="res://model/rocket_baseA.glb" id="1_yaa15"]
 [ext_resource type="Script" uid="uid://cwu6natuhnirq" path="res://scene/vessel/propulsion-model.gd" id="2_iny3f"]
 [ext_resource type="Script" uid="uid://r13biy7i0iye" path="res://scene/selection/selectable-3d.gd" id="3_6gmbg"]
+[ext_resource type="Script" uid="uid://0gr43c5yvaqv" path="res://scene/selection/selectable-3d-info.gd" id="3_xp77y"]
 [ext_resource type="Script" uid="uid://ba5egfqt32co" path="res://scene/command/engine-command-receiver.gd" id="4_3hl4c"]
 [ext_resource type="Shader" uid="uid://ct2norb4philf" path="res://scene/engine/thruster.gdshader" id="5_2cl03"]
 [ext_resource type="Texture2D" uid="uid://dr808lua13mut" path="res://texture/perlin-noise-small.png" id="6_onl8b"]
@@ -62,12 +63,16 @@ rings = 0
 cap_top = false
 cap_bottom = false
 
-[node name="LemaeEngine" type="RigidBody3D" unique_id=464772022 node_paths=PackedStringArray("plume")]
+[node name="LemaeEngine" type="RigidBody3D" unique_id=464772022 node_paths=PackedStringArray("plume", "info")]
 mass = 100.0
 can_sleep = false
 script = ExtResource("1_kowjs")
 propulsion_model = SubResource("Resource_xp77y")
 plume = NodePath("Plume")
+info = NodePath("Info")
+
+[node name="Info" type="Node" parent="." unique_id=853443548]
+script = ExtResource("3_xp77y")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2083866638]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
@@ -76,10 +81,11 @@ shape = SubResource("CylinderShape3D_b5lh5")
 [node name="rocket_baseA2" parent="." unique_id=2057328868 instance=ExtResource("1_yaa15")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.25, -1.5)
 
-[node name="Selectable3D" type="Area3D" parent="." unique_id=1484557443 node_paths=PackedStringArray("command_receiver")]
+[node name="Selectable3D" type="Area3D" parent="." unique_id=1484557443 node_paths=PackedStringArray("command_receiver", "info")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
 script = ExtResource("3_6gmbg")
 command_receiver = NodePath("../CommandReceiver")
+info = NodePath("../Info")
 metadata/_custom_type_script = "uid://r13biy7i0iye"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Selectable3D" unique_id=695016002]

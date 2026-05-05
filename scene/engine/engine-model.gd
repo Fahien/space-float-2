@@ -31,6 +31,13 @@ var plume: MeshInstance3D = null:
 			_plume_neutral_transform = plume.transform
 		update_configuration_warnings()
 
+@export
+## Optional selection panel data source updated from this engine's runtime state.
+var info: Selectable3DInfo = null:
+	set(p_info):
+		info = p_info
+		update_configuration_warnings()
+
 ## Current throttle setting, 0.0 (off) to 1.0 (full).
 var _throttle: float = 0.0
 
@@ -51,6 +58,12 @@ func _ready() -> void:
 		_plume_neutral_transform = plume.transform
 		_sync_plume_visual(false)
 	update_configuration_warnings()
+	_update_info()
+
+
+## Keeps selection-panel fields fresh between physics steps.
+func _process(_delta: float) -> void:
+	_update_info()
 
 
 func _get_configuration_warnings() -> PackedStringArray:
@@ -61,6 +74,8 @@ func _get_configuration_warnings() -> PackedStringArray:
 		warnings.append("Propulsion model is not set.")
 	if plume == null:
 		warnings.append("Plume mesh is not set.")
+	if info == null:
+		warnings.append("Selectable info is not set.")
 	return warnings
 
 
@@ -75,6 +90,17 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 		).normalized()
 		var thrust := thrust_dir * thrust_magnitude
 		state.apply_force(thrust)
+
+
+func _update_info() -> void:
+	if info == null:
+		return
+
+	info.info["name"] = name
+	info.info["throttle"] = _throttle
+	info.info["gimbal"] = _gimbal
+	info.info["gimbal_angles"] = _gimbal_angles
+	info.info["propellant_mass"] = get_propellant_mass()
 
 
 func get_propellant_mass() -> float:

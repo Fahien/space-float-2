@@ -1,0 +1,72 @@
+[gd_scene format=3 uid="uid://bra13jchy028"]
+
+[ext_resource type="Script" uid="uid://d38yh8monen4a" path="res://scene/ui/ui.gd" id="1_0nso0"]
+
+[node name="Ui" type="CanvasLayer" unique_id=825281140]
+script = ExtResource("1_0nso0")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=2095141179]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Panel" type="PanelContainer" parent="Margin" unique_id=1893243259]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="Margin" type="MarginContainer" parent="Margin/Panel" unique_id=1200344832]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="Margin/Panel/Margin" unique_id=1095689278]
+layout_mode = 2
+
+[node name="Vessel" type="Label" parent="Margin/Panel/Margin/VBox" unique_id=1234588453]
+layout_mode = 2
+text = "Vessel"
+
+[node name="Mass" type="Label" parent="Margin/Panel/Margin/VBox" unique_id=1933363072]
+layout_mode = 2
+text = "Mass"
+
+[node name="Speed" type="Label" parent="Margin/Panel/Margin/VBox" unique_id=199711139]
+layout_mode = 2
+text = "Speed"
+
+[node name="Altitude" type="Label" parent="Margin/Panel/Margin/VBox" unique_id=2020572442]
+layout_mode = 2
+text = "Altitude"
+
+[node name="Gravity" type="Label" parent="Margin/Panel/Margin/VBox" unique_id=871442761]
+layout_mode = 2
+text = "Gravity"
+
+[node name="GravityForce" type="Label" parent="Margin/Panel/Margin/VBox" unique_id=1262958410]
+layout_mode = 2
+text = "Gravity Force"
+
+[node name="ThrustForce" type="Label" parent="Margin/Panel/Margin/VBox" unique_id=219113040]
+layout_mode = 2
+text = "Thrust Force"
+
+[node name="DragForce" type="Label" parent="Margin/Panel/Margin/VBox" unique_id=541662230]
+layout_mode = 2
+text = "Drag Force"
+
+[node name="GimbalCommand" type="Label" parent="Margin/Panel/Margin/VBox" unique_id=358634301]
+layout_mode = 2
+text = "Gimbal Command"
+
+[node name="GimbalState" type="Label" parent="Margin/Panel/Margin/VBox" unique_id=1973704159]
+layout_mode = 2
+text = "Gimbal State"
