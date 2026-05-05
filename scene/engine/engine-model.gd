@@ -52,6 +52,9 @@ var _gimbal_angles: Vector2 = Vector2.ZERO
 ## Authored local plume transform before runtime gimbal deflection is applied.
 var _plume_neutral_transform: Transform3D = Transform3D.IDENTITY
 
+## Cached thrust force.
+var _thrust_force: Vector3 = Vector3.ZERO
+
 
 func _ready() -> void:
 	if plume != null:
@@ -88,8 +91,8 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 			state.transform.basis
 			* get_actual_thrust_direction_local()
 		).normalized()
-		var thrust := thrust_dir * thrust_magnitude
-		state.apply_force(thrust)
+		_thrust_force = thrust_dir * thrust_magnitude
+		state.apply_force(_thrust_force)
 
 
 func _update_info() -> void:
@@ -97,10 +100,17 @@ func _update_info() -> void:
 		return
 
 	info.info["name"] = name
+	info.info["total_mass"] = get_total_mass()
+	info.info["propellant_mass"] = get_propellant_mass()
+	info.info["speed"] = linear_velocity.length()
 	info.info["throttle"] = _throttle
+	info.info["thrust"] = _thrust_force
 	info.info["gimbal"] = _gimbal
 	info.info["gimbal_angles"] = _gimbal_angles
-	info.info["propellant_mass"] = get_propellant_mass()
+
+
+func get_total_mass() -> float:
+	return mass + get_propellant_mass()
 
 
 func get_propellant_mass() -> float:
