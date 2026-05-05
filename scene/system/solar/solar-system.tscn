@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://1o28alvotukx"]
+
+[ext_resource type="Texture2D" uid="uid://c11pdoeo7i4fy" path="res://texture/milky-way.jpg" id="1_rgool"]
+[ext_resource type="PackedScene" uid="uid://fbuj2aqj1wbf" path="res://scene/system/solar/bodies/earth.tscn" id="2_505xy"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_f3e57"]
+panorama = ExtResource("1_rgool")
+energy_multiplier = 0.1
+
+[sub_resource type="Sky" id="Sky_dd6y4"]
+sky_material = SubResource("PanoramaSkyMaterial_f3e57")
+
+[sub_resource type="Environment" id="Environment_wd4f6"]
+background_mode = 2
+sky = SubResource("Sky_dd6y4")
+tonemap_mode = 2
+glow_enabled = true
+
+[node name="Solar" type="BigSpaceRoot3D" unique_id=983839105]
+
+[node name="BigNode3D" type="BigNode3D" parent="." unique_id=1353014506]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="BigNode3D" unique_id=1897931948]
+transform = Transform3D(1, 0, 0, 0, 0.8400917202106111, 0.5424443765341996, 0, -0.5424443765341996, 0.8400917202106111, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="BigNode3D" unique_id=1292849628]
+environment = SubResource("Environment_wd4f6")
+
+[node name="BigGrid3D" type="BigGrid3D" parent="." unique_id=1796559471]
+cell_edge_length = 1000000000.000001
+switching_threshold = 100000000.0
+
+[node name="BigGrid3D" type="BigGrid3D" parent="BigGrid3D" unique_id=1381115127]
+cell_x = 150
+
+[node name="Earth" parent="BigGrid3D/BigGrid3D" unique_id=701989974 instance=ExtResource("2_505xy")]

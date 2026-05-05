@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://fbuj2aqj1wbf"]
+
+[ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="1_hw4fg"]
+[ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/globe/planet-model.gd" id="1_uho2q"]
+
+[node name="Center" type="Node3D" unique_id=1242020]
+transform = Transform3D(637.1, 0, 0, 0, 637.1, 0, 0, 0, 637.1, 0, 0, 0)
+script = ExtResource("1_uho2q")
+planet_name = "Earth"
+radius = 6371000.0
+mu = 398600441800000.0
+
+[node name="Globe" parent="." unique_id=493463791 instance=ExtResource("1_hw4fg")]
+geometry_scale = 10000.0

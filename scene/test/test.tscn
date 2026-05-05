@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://c11pdoeo7i4fy" path="res://texture/milky-way.jpg" id="2_m5u1r"]
 [ext_resource type="PackedScene" uid="uid://bmmwajbmxcv1r" path="res://scene/speeder/speeder.tscn" id="2_mih6t"]
 [ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="2_ppyta"]
-[ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/sim/planet-model.gd" id="3_50mf3"]
+[ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/globe/planet-model.gd" id="3_50mf3"]
 [ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="3_mih6t"]
 [ext_resource type="PackedScene" uid="uid://2q810yic3f5f" path="res://scene/vessel/vessel.tscn" id="7_ra30r"]
 [ext_resource type="Script" uid="uid://bqe0e4daq6oj2" path="res://scene/vessel/mass-model.gd" id="9_tfij0"]
