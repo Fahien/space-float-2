@@ -50,7 +50,7 @@ var patch: PackedScene = null:
 ## generated `MeshInstance3D` descendants are updated in place by the setter so
 ## material edits in the inspector do not require a full rebuild.
 @export
-var material: StandardMaterial3D = null:
+var material: Material = null:
 	set(p_material):
 		material = p_material
 		_apply_material()

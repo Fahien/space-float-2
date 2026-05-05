@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://drb0gb235asdd"]
+
+[ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="1_81i6o"]
+[ext_resource type="Shader" uid="uid://btihf23iuiva4" path="res://scene/system/solar/bodies/sun.gdshader" id="2_t35bx"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_457ta"]
+frequency = 1.0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_hla6e"]
+noise = SubResource("FastNoiseLite_457ta")
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_vov5x"]
+frequency = 1.0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_0avqm"]
+noise = SubResource("FastNoiseLite_vov5x")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wpusx"]
+render_priority = 0
+shader = ExtResource("2_t35bx")
+shader_parameter/plasma_noise = SubResource("NoiseTexture2D_0avqm")
+shader_parameter/detail_noise = SubResource("NoiseTexture2D_hla6e")
+shader_parameter/dark_orange = Color(0.65, 0.05, 0, 1)
+shader_parameter/orange = Color(1, 0.32, 0.02, 1)
+shader_parameter/yellow = Color(1, 0.85, 0.2, 1)
+shader_parameter/white_hot = Color(1, 0.98, 0.75, 1)
+shader_parameter/plasma_scale = 2.5
+shader_parameter/detail_scale = 12.0
+shader_parameter/flow_speed = 0.005
+shader_parameter/contrast = 1.8
+shader_parameter/emission_strength = 4.0
+shader_parameter/hot_spot_threshold = 0.68
+shader_parameter/surface_displacement = 0.025
+
+[node name="Sun" type="Node3D" unique_id=477703425]
+
+[node name="Globe" parent="." unique_id=493463791 instance=ExtResource("1_81i6o")]
+material = SubResource("ShaderMaterial_wpusx")
