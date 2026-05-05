@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://drb0gb235asdd"]
 
 [ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="1_81i6o"]
+[ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/globe/planet-model.gd" id="1_t35bx"]
 [ext_resource type="Shader" uid="uid://btihf23iuiva4" path="res://scene/system/solar/bodies/sun.gdshader" id="2_t35bx"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_457ta"]
@@ -32,7 +33,12 @@ shader_parameter/emission_strength = 4.0
 shader_parameter/hot_spot_threshold = 0.68
 shader_parameter/surface_displacement = 0.025
 
-[node name="Sun" type="Node3D" unique_id=477703425]
+[node name="Sun" type="BigNode3D" unique_id=1634657910]
+script = ExtResource("1_t35bx")
+planet_name = "Sun"
+radius = 696000000.0
+mu = 132712440018.0
 
 [node name="Globe" parent="." unique_id=493463791 instance=ExtResource("1_81i6o")]
+transform = Transform3D(696000000, 0, 0, 0, 696000000, 0, 0, 0, 696000000, 0, 0, 0)
 material = SubResource("ShaderMaterial_wpusx")

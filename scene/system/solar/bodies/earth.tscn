@@ -2,13 +2,21 @@
 
 [ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="1_hw4fg"]
 [ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/globe/planet-model.gd" id="1_uho2q"]
+[ext_resource type="PackedScene" uid="uid://ebcwe2nqwieb" path="res://model/flag-red.glb" id="3_q8l8h"]
 
-[node name="Center" type="Node3D" unique_id=1242020]
-transform = Transform3D(637.1, 0, 0, 0, 637.1, 0, 0, 0, 637.1, 0, 0, 0)
+[node name="BigGrid3D" type="BigGrid3D" unique_id=1098988874]
 script = ExtResource("1_uho2q")
 planet_name = "Earth"
 radius = 6371000.0
 mu = 398600441800000.0
 
 [node name="Globe" parent="." unique_id=493463791 instance=ExtResource("1_hw4fg")]
+transform = Transform3D(637.1, 0, 0, 0, 637.1, 0, 0, 0, 637.1, 0, 0, 0)
 geometry_scale = 10000.0
+
+[node name="NorthPole" type="BigNode3D" parent="." unique_id=201040788]
+cell_y = 6371
+
+[node name="Flag" type="Node3D" parent="NorthPole" unique_id=1004560099]
+
+[node name="flag-red2" parent="NorthPole/Flag" unique_id=509779276 instance=ExtResource("3_q8l8h")]
