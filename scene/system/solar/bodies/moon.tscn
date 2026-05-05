@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://bjtp1iqip2ey6"]
+
+[ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/globe/planet-model.gd" id="1_6wodc"]
+[ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="1_mlmqn"]
+[ext_resource type="Texture2D" uid="uid://b4wna3da1jc5r" path="res://texture/moon-1k.png" id="2_6wodc"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vvynr"]
+albedo_texture = ExtResource("2_6wodc")
+
+[node name="Moon" type="BigGrid3D" unique_id=247662509]
+script = ExtResource("1_6wodc")
+planet_name = "Moon"
+radius = 1737000.0
+mu = 4902.8
+
+[node name="Globe" parent="." unique_id=493463791 instance=ExtResource("1_mlmqn")]
+transform = Transform3D(173.7, 0, 0, 0, 173.7, 0, 0, 0, 173.7, 0, 0, 0)
+material = SubResource("StandardMaterial3D_vvynr")
+geometry_scale = 10000.0
+
+[node name="NorthPole" type="BigNode3D" parent="." unique_id=1772428812]
+cell_y = 1737

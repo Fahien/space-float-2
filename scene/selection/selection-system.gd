@@ -13,6 +13,8 @@ func _unhandled_input(p_event: InputEvent) -> void:
 	if p_event is InputEventMouseButton:
 		if p_event.button_index == MOUSE_BUTTON_LEFT and p_event.pressed:
 			_pick(p_event.position)
+	elif p_event.is_action_pressed("exit"):
+		clear_selection()
 
 
 func _pick(p_position_in_screen_space: Vector2) -> void:
@@ -32,6 +34,8 @@ func _pick(p_position_in_screen_space: Vector2) -> void:
 	var from := camera.project_ray_origin(p_position_in_screen_space)
 	# Ray direction in world space.
 	var to := from + camera.project_ray_normal(p_position_in_screen_space) * ray_length
+
+	print("Picking from ", from, " to ", to)
 
 	var query := PhysicsRayQueryParameters3D.create(from, to)
 	query.collision_mask = selection_collision_mask

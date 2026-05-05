@@ -2,9 +2,12 @@
 
 [ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="1_hw4fg"]
 [ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/globe/planet-model.gd" id="1_uho2q"]
+[ext_resource type="PackedScene" uid="uid://c3x4fdu3o1dpa" path="res://scene/engine/lamae.tscn" id="3_o23ev"]
 [ext_resource type="PackedScene" uid="uid://ebcwe2nqwieb" path="res://model/flag-red.glb" id="3_q8l8h"]
+[ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="5_6egep"]
+[ext_resource type="PackedScene" uid="uid://bjtp1iqip2ey6" path="res://scene/system/solar/bodies/moon.tscn" id="6_7uqqb"]
 
-[node name="BigGrid3D" type="BigGrid3D" unique_id=1098988874]
+[node name="Earth" type="BigGrid3D" unique_id=1098988874]
 script = ExtResource("1_uho2q")
 planet_name = "Earth"
 radius = 6371000.0
@@ -17,6 +20,18 @@ geometry_scale = 10000.0
 [node name="NorthPole" type="BigNode3D" parent="." unique_id=201040788]
 cell_y = 6371
 
+[node name="Lamae" parent="NorthPole" unique_id=2118705930 instance=ExtResource("3_o23ev")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2518130461237327, 0, 0)
+
 [node name="Flag" type="Node3D" parent="NorthPole" unique_id=1004560099]
 
 [node name="flag-red2" parent="NorthPole/Flag" unique_id=509779276 instance=ExtResource("3_q8l8h")]
+
+[node name="Lamae2" parent="NorthPole" unique_id=799230312 instance=ExtResource("3_o23ev")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.268326184268006, 0, 0)
+
+[node name="CameraOrbitRoot" parent="NorthPole" unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("5_6egep")]
+target = NodePath("../Flag")
+
+[node name="Moon" parent="." unique_id=1357675097 instance=ExtResource("6_7uqqb")]
+cell_x = 400000

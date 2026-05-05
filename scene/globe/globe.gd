@@ -60,7 +60,7 @@ var material: Material = null:
 ##
 ## This keeps the surrounding scene free to use coarse origin/grid scale while
 ## `Patch` still builds meshes around a stable local sphere radius.
-@export_range(1.0, 10000.0, 10.0)
+@export_range(1.0, 10000.0, 1.0)
 var geometry_scale := 1.0:
 	set(p_geometry_scale):
 		geometry_scale = p_geometry_scale
