@@ -6,7 +6,8 @@
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_7l4x7"]
 height = 0.5
 
-[node name="PropellantVessel" type="RigidBody3D" unique_id=1836508573]
+[node name="PropellantTank" type="RigidBody3D" unique_id=1836508573]
+mass = 110.0
 script = ExtResource("1_j1vl0")
 dry_mass = 10.0
 initial_propellant_mass = 100.0

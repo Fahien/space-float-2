@@ -2,9 +2,8 @@
 
 [ext_resource type="Texture2D" uid="uid://c11pdoeo7i4fy" path="res://texture/milky-way.jpg" id="1_rqrpt"]
 [ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="2_kgaxx"]
-[ext_resource type="PackedScene" uid="uid://d3uw88kymxrky" path="res://scene/engine/lemae-engine.tscn" id="3_vsoa4"]
+[ext_resource type="PackedScene" uid="uid://c3x4fdu3o1dpa" path="res://scene/engine/lamae.tscn" id="3_kgaxx"]
 [ext_resource type="PackedScene" uid="uid://b8gl2co6a5cp0" path="res://scene/selection/selection-view.tscn" id="4_77n7y"]
-[ext_resource type="PackedScene" uid="uid://bp368ab2thy5" path="res://scene/engine/propellant-vessel.tscn" id="4_kgaxx"]
 [ext_resource type="PackedScene" uid="uid://bra13jchy028" path="res://scene/ui/ui.tscn" id="6_vsoa4"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_t0yu5"]
@@ -43,18 +42,11 @@ cell_x = 1
 [node name="SelectionView" parent="BigGrid3D/BigNode3D" unique_id=423019397 instance=ExtResource("4_77n7y")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1000.000001, 0, 0)
 
-[node name="Lamae" type="Node3D" parent="BigGrid3D/BigNode3D" unique_id=1596813510]
-
-[node name="LemaeEngine" parent="BigGrid3D/BigNode3D/Lamae" unique_id=464772022 node_paths=PackedStringArray("propellant_model") instance=ExtResource("3_vsoa4")]
-propellant_model = NodePath("../PropellantVessel")
-
-[node name="PropellantVessel" parent="BigGrid3D/BigNode3D/Lamae" unique_id=1836508573 instance=ExtResource("4_kgaxx")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-mass = 110.0
-
 [node name="MeshInstance3D" type="MeshInstance3D" parent="BigGrid3D/BigNode3D" unique_id=340127845]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 mesh = SubResource("PlaneMesh_kgaxx")
+
+[node name="Lamae" parent="BigGrid3D/BigNode3D" unique_id=2118705930 instance=ExtResource("3_kgaxx")]
 
 [node name="CameraOrbitRoot" parent="BigGrid3D" unique_id=188560390 instance=ExtResource("2_kgaxx")]
 transform = Transform3D(6.123233995736767e-17, 0, -1.0000000000000002, 0, 1, 0, 1.0000000000000002, 0, 6.123233995736767e-17, 0, 0, 0)

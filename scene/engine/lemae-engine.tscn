@@ -97,6 +97,7 @@ engine_model = NodePath("..")
 
 [node name="Plume" type="MeshInstance3D" parent="." unique_id=1225193478]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+visible = false
 mesh = SubResource("CylinderMesh_iny3f")
 
 [node name="Inner" type="MeshInstance3D" parent="Plume" unique_id=232356445]
