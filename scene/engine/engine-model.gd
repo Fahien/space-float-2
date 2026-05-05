@@ -21,22 +21,35 @@ var propulsion_model: PropulsionModel = PropulsionModel.new():
 		update_configuration_warnings()
 
 @export
+## Render-only exhaust plume that mirrors the resolved gimbal angle. Its
+## authored local transform is captured as neutral so runtime deflection can be
+## reapplied without accumulating transform drift.
 var plume: MeshInstance3D = null:
 	set(p_plume):
 		plume = p_plume
+		if plume != null:
+			_plume_neutral_transform = plume.transform
 		update_configuration_warnings()
 
 ## Current throttle setting, 0.0 (off) to 1.0 (full).
 var _throttle: float = 0.0
 
-## Normalized actuator command for pitch and yaw deflection.
-var _gimbal_command: Vector2 = Vector2.ZERO
+## Normalized actuator command for pitch and yaw deflection. Roll input is
+## accepted by `set_gimbal()` for command-payload compatibility, but a single
+## engine's roll axis does not redirect thrust and is not stored here.
+var _gimbal: Vector2 = Vector2.ZERO
 
 ## Actual slewed gimbal angles in radians for pitch and yaw.
 var _gimbal_angles: Vector2 = Vector2.ZERO
 
+## Authored local plume transform before runtime gimbal deflection is applied.
+var _plume_neutral_transform: Transform3D = Transform3D.IDENTITY
+
 
 func _ready() -> void:
+	if plume != null:
+		_plume_neutral_transform = plume.transform
+		_sync_plume_visual(false)
 	update_configuration_warnings()
 
 
@@ -54,8 +67,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 	resolve_gimbal_step(state.step)
 	var thrust_magnitude := resolve_propulsion_step(state.step)
-	if plume != null:
-		plume.visible = thrust_magnitude > 0.0
+	_sync_plume_visual(thrust_magnitude > 0.0)
 	if thrust_magnitude > 0.0:
 		var thrust_dir := (
 			state.transform.basis
@@ -76,26 +88,33 @@ func set_throttle(p_throttle: float) -> void:
 	if get_throttle() > 0.0:
 		sleeping = false
 
+
 func get_throttle() -> float:
 	return _throttle
 
 
-## Desired actuator command in normalized pitch/yaw space.
-func set_gimbal_command(p_gimbal_command: Vector2) -> void:
-	_gimbal_command = Vector2(
-		clampf(p_gimbal_command.x, -1.0, 1.0),
-		clampf(p_gimbal_command.y, -1.0, 1.0)
+## Sets the desired actuator command in normalized pitch/yaw space.
+##
+## `p_gimbal.x` is pitch, `p_gimbal.y` is yaw, and `p_gimbal.z` is ignored by
+## this adapter. Values are clamped before they are turned into target angles.
+func set_gimbal(p_gimbal: Vector3) -> void:
+	_gimbal = Vector2(
+		clampf(p_gimbal.x, -1.0, 1.0),
+		clampf(p_gimbal.y, -1.0, 1.0)
 	)
 
 
-func get_gimbal_command() -> Vector2:
-	return _gimbal_command
+## Returns the clamped pitch/yaw command currently requested by the receiver.
+func get_gimbal() -> Vector2:
+	return _gimbal
 
 
+## Returns the resolved actuator angles after slew-rate limiting.
 func get_gimbal_angles() -> Vector2:
 	return _gimbal_angles
 
 
+## Returns the resolved actuator angles in degrees for HUD/debug output.
 func get_gimbal_angles_degrees() -> Vector2:
 	return Vector2(
 		rad_to_deg(_gimbal_angles.x),
@@ -118,7 +137,7 @@ func resolve_gimbal_step(delta: float) -> Basis:
 		return get_actual_gimbal_basis_local()
 
 	var target_angles := propulsion_model.get_gimbal_target_angles(
-		Vector3(_gimbal_command.x, _gimbal_command.y, 0.0)
+		Vector3(_gimbal.x, _gimbal.y, 0.0)
 	)
 	var max_step := propulsion_model.get_gimbal_slew_rate_radians() * delta
 	if max_step <= 0.0:
@@ -126,6 +145,7 @@ func resolve_gimbal_step(delta: float) -> Basis:
 	else:
 		_gimbal_angles.x = move_toward(_gimbal_angles.x, target_angles.x, max_step)
 		_gimbal_angles.y = move_toward(_gimbal_angles.y, target_angles.y, max_step)
+
 	return get_actual_gimbal_basis_local()
 
 
@@ -140,6 +160,20 @@ func get_actual_gimbal_basis_local() -> Basis:
 ## Returns the current thrust axis relative to the neutral mount frame.
 func get_actual_thrust_direction_local() -> Vector3:
 	return (get_actual_gimbal_basis_local() * Vector3.UP).normalized()
+
+
+## Mirrors the current resolved actuator basis onto the render-only plume and
+## toggles visibility from the actual thrust result, not the requested throttle.
+func _sync_plume_visual(is_burning: bool) -> void:
+	if plume == null:
+		return
+
+	var gimbal_basis := get_actual_gimbal_basis_local()
+	plume.transform = Transform3D(
+		gimbal_basis * _plume_neutral_transform.basis,
+		gimbal_basis * _plume_neutral_transform.origin
+	)
+	plume.visible = is_burning
 
 
 ## Resolves one propulsion step, consuming propellant and returning the thrust

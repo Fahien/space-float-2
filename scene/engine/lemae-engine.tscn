@@ -11,8 +11,6 @@
 [sub_resource type="Resource" id="Resource_xp77y"]
 script = ExtResource("2_iny3f")
 max_thrust_newtons = 16000.0
-max_gimbal_pitch_degrees = 0.0
-max_gimbal_yaw_degrees = 0.0
 metadata/_custom_type_script = "uid://cwu6natuhnirq"
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_b5lh5"]
@@ -66,6 +64,7 @@ cap_bottom = false
 
 [node name="LemaeEngine" type="RigidBody3D" unique_id=464772022 node_paths=PackedStringArray("plume")]
 mass = 100.0
+can_sleep = false
 script = ExtResource("1_kowjs")
 propulsion_model = SubResource("Resource_xp77y")
 plume = NodePath("Plume")
@@ -91,7 +90,7 @@ script = ExtResource("4_3hl4c")
 engine_model = NodePath("..")
 
 [node name="Plume" type="MeshInstance3D" parent="." unique_id=1225193478]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.0500000000029104, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 mesh = SubResource("CylinderMesh_iny3f")
 
 [node name="Inner" type="MeshInstance3D" parent="Plume" unique_id=232356445]

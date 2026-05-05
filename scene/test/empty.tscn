@@ -19,6 +19,9 @@ sky = SubResource("Sky_dd6y4")
 tonemap_mode = 2
 glow_enabled = true
 
+[sub_resource type="PlaneMesh" id="PlaneMesh_kgaxx"]
+size = Vector2(200, 200)
+
 [node name="Empty" type="BigSpaceRoot3D" unique_id=2026111574]
 cell_edge_length = 10.000001
 floating_origin_path = NodePath("BigGrid3D/CameraOrbitRoot")
@@ -48,4 +51,9 @@ propellant_model = NodePath("../PropellantVessel")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mass = 110.0
 
+[node name="MeshInstance3D" type="MeshInstance3D" parent="BigGrid3D/BigNode3D" unique_id=340127845]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+mesh = SubResource("PlaneMesh_kgaxx")
+
 [node name="CameraOrbitRoot" parent="BigGrid3D" unique_id=188560390 instance=ExtResource("2_kgaxx")]
+transform = Transform3D(6.123233995736767e-17, 0, -1.0000000000000002, 0, 1, 0, 1.0000000000000002, 0, 6.123233995736767e-17, 0, 0, 0)
