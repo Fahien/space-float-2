@@ -8,7 +8,7 @@ var anchor: Node3D = null
 
 @export
 ## Receiver that accepts command payloads while this selectable is active.
-var command_receiver: CommandReceiver = CommandReceiver.new()
+var command_receiver: CommandReceiver = null
 
 @export
 ## Optional runtime info source rendered by selection UI panels.
