@@ -12,6 +12,7 @@
 [sub_resource type="Resource" id="Resource_xp77y"]
 script = ExtResource("2_iny3f")
 max_thrust_newtons = 16000.0
+gimbal_slew_degrees_per_second = 5.0
 metadata/_custom_type_script = "uid://cwu6natuhnirq"
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_b5lh5"]
@@ -81,15 +82,19 @@ shape = SubResource("CylinderShape3D_b5lh5")
 [node name="rocket_baseA2" parent="." unique_id=2057328868 instance=ExtResource("1_yaa15")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.25, -1.5)
 
-[node name="Selectable3D" type="Area3D" parent="." unique_id=1484557443 node_paths=PackedStringArray("command_receiver", "info")]
+[node name="Selectable3D" type="Area3D" parent="." unique_id=1484557443 node_paths=PackedStringArray("anchor", "command_receiver", "info")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
 script = ExtResource("3_6gmbg")
+anchor = NodePath("Anchor")
 command_receiver = NodePath("../CommandReceiver")
 info = NodePath("../Info")
 metadata/_custom_type_script = "uid://r13biy7i0iye"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Selectable3D" unique_id=695016002]
 shape = SubResource("SphereShape3D_3hl4c")
+
+[node name="Anchor" type="Node3D" parent="Selectable3D" unique_id=681103454]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 
 [node name="CommandReceiver" type="Node3D" parent="." unique_id=1460482187 node_paths=PackedStringArray("engine_model")]
 script = ExtResource("4_3hl4c")

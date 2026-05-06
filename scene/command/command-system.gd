@@ -30,8 +30,8 @@ func _process(_delta: float) -> void:
 	if Input.is_action_pressed("ship_pitch_down"):
 		command.gimbal.x -= 1.0
 	if Input.is_action_pressed("ship_yaw_left"):
-		command.gimbal.y += 1.0
-	if Input.is_action_pressed("ship_yaw_right"):
 		command.gimbal.y -= 1.0
+	if Input.is_action_pressed("ship_yaw_right"):
+		command.gimbal.y += 1.0
 
 	receiver.receive_command(command)

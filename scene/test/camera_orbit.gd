@@ -24,6 +24,8 @@ class_name CameraOrbit
 
 extends Node3D
 
+const BIG_SPACE_OBSERVER_PROCESS_PRIORITY := -100
+
 @export var mouse_sensitivity := 0.01
 @export var rotation_responsiveness := 20.0
 @export var zoom_step := 2.0
@@ -72,6 +74,13 @@ var pending_mouse_delta := Vector2.ZERO
 var is_lmb_down := false
 var is_rotating := false
 var drag_accumulator := Vector2.ZERO
+
+
+func _enter_tree() -> void:
+	# This node is the BigSpaceRoot3D floating origin in the main scenes. Move
+	# it before the root's internal render refresh so the frame is not rendered
+	# from the previous focus position.
+	process_priority = BIG_SPACE_OBSERVER_PROCESS_PRIORITY
 
 
 func _ready() -> void:

@@ -16,4 +16,4 @@ margin = 2.0
 
 [node name="Camera3D" type="Camera3D" parent="YawPivot/PitchPivot/SpringArm3D" unique_id=1848053357]
 current = true
-far = 15000000000000.01
+far = 150000000000000.0

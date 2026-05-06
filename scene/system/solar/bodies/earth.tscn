@@ -21,17 +21,18 @@ geometry_scale = 10000.0
 cell_y = 6371
 
 [node name="Lamae" parent="NorthPole" unique_id=2118705930 instance=ExtResource("3_o23ev")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2518130461237327, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2519999999931315, 2, 0)
 
 [node name="Flag" type="Node3D" parent="NorthPole" unique_id=1004560099]
 
 [node name="flag-red2" parent="NorthPole/Flag" unique_id=509779276 instance=ExtResource("3_q8l8h")]
 
 [node name="Lamae2" parent="NorthPole" unique_id=799230312 instance=ExtResource("3_o23ev")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.268326184268006, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.267999999996391, 2, 0)
 
 [node name="CameraOrbitRoot" parent="NorthPole" unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("5_6egep")]
-target = NodePath("../Flag")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+target = NodePath("../Lamae")
 
 [node name="Moon" parent="." unique_id=1357675097 instance=ExtResource("6_7uqqb")]
 cell_x = 400000
