@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot"
+  short_description: "Godot workflows using the local engine"
+  default_prompt: "Use $godot to run Godot checks for this project."
