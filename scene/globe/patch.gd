@@ -533,7 +533,6 @@ func _process(delta: float) -> void:
 
 	if lod < max_lod and _is_leaf:
 		if distance < split_threshold:
-			print("Subdividing patch at center ", patch_center, " LOD ", lod, " with distance ", distance)
 			subdivide()
 			_lod_cooldown_left = lod_decision_cooldown
 
@@ -542,6 +541,5 @@ func _process(delta: float) -> void:
 			# Hysteresis keeps the patch from joining immediately after a split.
 			var join_threshold = split_threshold * 1.25
 			if distance >= join_threshold:
-				print("Joining patch at LOD ", lod, " with distance ", distance)
 				join()
 				_lod_cooldown_left = lod_decision_cooldown

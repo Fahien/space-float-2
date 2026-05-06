@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="space-float-2"
+run/main_scene="uid://1o28alvotukx"
 config/features=PackedStringArray("4.7", "Double Precision", "Forward Plus")
 config/icon="res://icon.svg"
 

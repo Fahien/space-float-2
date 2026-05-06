@@ -35,8 +35,6 @@ func _pick(p_position_in_screen_space: Vector2) -> void:
 	# Ray direction in world space.
 	var to := from + camera.project_ray_normal(p_position_in_screen_space) * ray_length
 
-	print("Picking from ", from, " to ", to)
-
 	var query := PhysicsRayQueryParameters3D.create(from, to)
 	query.collision_mask = selection_collision_mask
 	query.collide_with_areas = true
@@ -69,7 +67,6 @@ func select(selectable: Selectable3D) -> void:
 		return
 
 	current = selectable
-	print("Selected: ", current)
 	selection_changed.emit(current)
 
 
