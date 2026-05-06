@@ -1,7 +1,5 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
-model/
-texture/
 target/
 doc/
