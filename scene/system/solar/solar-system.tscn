@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://c11pdoeo7i4fy" path="res://texture/milky-way.jpg" id="1_rgool"]
 [ext_resource type="PackedScene" uid="uid://fbuj2aqj1wbf" path="res://scene/system/solar/bodies/earth.tscn" id="2_505xy"]
 [ext_resource type="PackedScene" uid="uid://drb0gb235asdd" path="res://scene/system/solar/bodies/sun.tscn" id="2_f3e57"]
+[ext_resource type="PackedScene" uid="uid://bra13jchy028" path="res://scene/ui/ui.tscn" id="4_f3e57"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_f3e57"]
 panorama = ExtResource("1_rgool")
@@ -35,5 +36,7 @@ environment = SubResource("Environment_wd4f6")
 
 [node name="Earth" parent="BigGrid3D" unique_id=701989974 instance=ExtResource("2_505xy")]
 cell_x = 150000000
+
+[node name="Ui" parent="." unique_id=825281140 instance=ExtResource("4_f3e57")]
 
 [editable path="BigGrid3D/Earth"]
