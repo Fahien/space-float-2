@@ -1,6 +1,14 @@
 ## CameraOrbit owns orbit-style camera presentation around a chosen world
 ## target.
 ##
+## Node layout:
+## - CameraOrbitRoot moves to the current focus point.
+## - YawPivot stores horizontal orbit rotation.
+## - PitchPivot stores vertical orbit rotation.
+## - SpringArm3D holds the camera at the requested zoom distance and moves it
+##   closer when another collider blocks the view.
+## - Camera3D renders the active view.
+##
 ## Responsibilities:
 ## - keep the orbit rig aligned to the current target
 ## - turn pointer deltas into yaw/pitch intent
@@ -9,6 +17,9 @@
 ## It does not decide which gameplay object should be followed, and it does
 ## not own focus-selection policy. Higher-level nodes choose the target and
 ## decide whether a gesture means selection, orbit, or something else.
+##
+## Screen-space systems should use the wrapper methods at the end of this file
+## instead of reaching into the child camera node directly.
 class_name CameraOrbit
 
 extends Node3D
@@ -39,9 +50,18 @@ extends Node3D
 @onready var spring_arm: SpringArm3D = $YawPivot/PitchPivot/SpringArm3D
 @onready var camera: Camera3D = $YawPivot/PitchPivot/SpringArm3D/Camera3D
 
-## The node the orbit rig follows. Exported so standalone scenes like the
-## physics harness can wire the target in the editor without code.
-@export var target: Node3D
+## The node the orbit rig follows.
+##
+## Exported so standalone scenes like the physics harness can wire the target
+## in the editor without code. Setting this value snaps the rig immediately and
+## rebuilds spring-arm exclusions so target changes do not lerp from unrelated
+## world positions or collide with the new focus object.
+@export var target: Node3D:
+	set(new_target):
+		target = new_target
+		if is_node_ready():
+			_snap_to_target()
+			_refresh_spring_arm_exclusions()
 
 var target_yaw := 0.0
 var target_pitch := 0.0
@@ -59,6 +79,8 @@ func _ready() -> void:
 	target_yaw = yaw_pivot.rotation.y
 	target_pitch = pitch_pivot.rotation.x
 	target_zoom = spring_arm.spring_length
+	_snap_to_target()
+	_refresh_spring_arm_exclusions()
 
 	SelectionSystem.selection_changed.connect(_on_selection_changed)
 
@@ -76,8 +98,6 @@ func _ensure_explicit_spring_arm_shape() -> void:
 ## not interpolate from stale unrelated positions.
 func set_target(new_target: Node3D) -> void:
 	target = new_target
-	if target:
-		global_position = target.global_position
 
 
 func _input(event: InputEvent) -> void:
@@ -88,6 +108,11 @@ func _input(event: InputEvent) -> void:
 
 
 ## Accumulates local orbit intent from mouse input.
+##
+## Left-button drag orbits the camera after `drag_start_threshold` pixels.
+## Mouse-wheel input is handled by `_input()` through the `zoom_in` and
+## `zoom_out` actions.
+##
 ## This node tracks drag/orbit state only; it does not decide whether a left
 ## click should instead be interpreted as a gameplay selection.
 func _unhandled_input(event: InputEvent) -> void:
@@ -127,10 +152,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	if target != null and not is_instance_valid(target):
+		target = null
+
 	# Smoothly keep the orbit root centered on the current target.
-	if target:
+	if _has_valid_target():
 		var t_follow := 1.0 - exp(-target_follow_responsiveness * delta)
-		global_position = global_position.lerp(target.global_position, t_follow)
+		global_position = global_position.lerp(_get_focus_position(), t_follow)
 
 	# Convert accumulated pointer motion into desired orbit angles.
 	if pending_mouse_delta != Vector2.ZERO:
@@ -151,6 +179,141 @@ func _process(delta: float) -> void:
 	# Smooth zoom toward the requested spring-arm length.
 	var t_zoom := 1.0 - exp(-zoom_responsiveness * delta)
 	spring_arm.spring_length = lerp(spring_arm.spring_length, target_zoom, t_zoom)
+
+
+func _snap_to_target() -> void:
+	if _has_valid_target():
+		global_position = _get_focus_position()
+
+
+## Resolves the point that should stay at the center of the orbit.
+##
+## Selectable scenes can provide a presentation anchor that differs from the
+## selectable Area3D origin. This keeps selection rings, UI focus, and camera
+## focus on the same authored point. Non-selectable targets focus their own
+## origin.
+func _get_focus_position() -> Vector3:
+	var selectable := target as Selectable3D
+	if selectable != null:
+		var anchor := selectable.get_selection_anchor()
+		if is_instance_valid(anchor):
+			return anchor.global_position
+	return target.global_position
+
+
+func _has_valid_target() -> bool:
+	return target != null and is_instance_valid(target)
+
+
+## Keeps SpringArm3D obstacle sweeps from shortening against the followed
+## object. The exclusions are rebuilt whenever the target changes because the
+## selected node may be a child Area3D inside a larger rigid-body assembly.
+##
+## Exclusion rules:
+## - Exclude the target when it is a CollisionObject3D.
+## - Exclude descendant collision objects under the target.
+## - If the target lives inside a PhysicsBody3D, exclude that body.
+## - If that body belongs to a small authored assembly, exclude sibling bodies
+##   in the same assembly.
+func _refresh_spring_arm_exclusions() -> void:
+	if spring_arm == null:
+		return
+	spring_arm.clear_excluded_objects()
+	if not _has_valid_target():
+		return
+
+	var excluded: Dictionary = {}
+	var roots := _get_spring_arm_exclusion_roots()
+	for root in roots:
+		_add_collision_object_exclusion(root, excluded)
+		_add_descendant_collision_object_exclusions(root, excluded)
+
+
+func _get_spring_arm_exclusion_roots() -> Array[Node]:
+	var roots: Array[Node] = []
+	if not _has_valid_target():
+		return roots
+
+	_add_unique_exclusion_root(roots, target)
+
+	var collision_ancestor := _find_first_collision_object_ancestor(target)
+	if collision_ancestor != null:
+		_add_unique_exclusion_root(roots, collision_ancestor)
+
+	var body_ancestor := target as PhysicsBody3D
+	if body_ancestor == null:
+		body_ancestor = _find_first_physics_body_ancestor(target)
+	if body_ancestor != null:
+		_add_unique_exclusion_root(roots, body_ancestor)
+		var assembly_root := body_ancestor.get_parent()
+		# Exclude small authored assemblies, but never broad spatial containers.
+		if _should_exclude_descendants_of(assembly_root):
+			_add_unique_exclusion_root(roots, assembly_root)
+
+	return roots
+
+
+func _add_unique_exclusion_root(roots: Array[Node], node: Node) -> void:
+	if node == null or not is_instance_valid(node) or roots.has(node):
+		return
+	roots.append(node)
+
+
+func _add_collision_object_exclusion(node: Node, excluded: Dictionary) -> void:
+	var collision_object := node as CollisionObject3D
+	if collision_object == null:
+		return
+
+	var rid: RID = collision_object.get_rid()
+	if excluded.has(rid):
+		return
+
+	spring_arm.add_excluded_object(rid)
+	excluded[rid] = true
+
+
+func _add_descendant_collision_object_exclusions(root: Node, excluded: Dictionary) -> void:
+	for child in root.get_children():
+		_add_collision_object_exclusion(child, excluded)
+		_add_descendant_collision_object_exclusions(child, excluded)
+
+
+func _find_first_collision_object_ancestor(node: Node) -> CollisionObject3D:
+	if node == null or not is_instance_valid(node):
+		return null
+
+	var parent: Node = node.get_parent()
+	while parent != null:
+		var collision_object := parent as CollisionObject3D
+		if collision_object != null:
+			return collision_object
+		parent = parent.get_parent()
+	return null
+
+
+func _find_first_physics_body_ancestor(node: Node) -> PhysicsBody3D:
+	if node == null or not is_instance_valid(node):
+		return null
+
+	var parent: Node = node.get_parent()
+	while parent != null:
+		var body := parent as PhysicsBody3D
+		if body != null:
+			return body
+		parent = parent.get_parent()
+	return null
+
+
+func _should_exclude_descendants_of(node: Node) -> bool:
+	if node == null:
+		return false
+	# Big-space nodes are broad spatial containers. Excluding their descendants
+	# would hide too much of the world from spring-arm collision.
+	return (
+		not node.is_class("BigGrid3D")
+		and not node.is_class("BigNode3D")
+		and not node.is_class("BigSpaceRoot3D")
+	)
 
 
 ## Convenience wrappers used by screen-space picking code.
