@@ -3,7 +3,6 @@
 [ext_resource type="Texture2D" uid="uid://c11pdoeo7i4fy" path="res://texture/milky-way.jpg" id="1_rqrpt"]
 [ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="2_kgaxx"]
 [ext_resource type="PackedScene" uid="uid://c3x4fdu3o1dpa" path="res://scene/engine/lamae.tscn" id="3_kgaxx"]
-[ext_resource type="PackedScene" uid="uid://b8gl2co6a5cp0" path="res://scene/selection/selection-view.tscn" id="4_77n7y"]
 [ext_resource type="PackedScene" uid="uid://bra13jchy028" path="res://scene/ui/ui.tscn" id="6_vsoa4"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_t0yu5"]
@@ -38,9 +37,6 @@ cell_edge_length = 10.000001
 
 [node name="BigNode3D" type="BigNode3D" parent="BigGrid3D" unique_id=632123796]
 cell_x = 1
-
-[node name="SelectionView" parent="BigGrid3D/BigNode3D" unique_id=423019397 instance=ExtResource("4_77n7y")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1000.000001, 0, 0)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="BigGrid3D/BigNode3D" unique_id=340127845]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
