@@ -2,10 +2,10 @@
 
 ## Project Structure & Module Organization
 
-This is a Godot 4.7 double-precision project. `project.godot` defines the main scene as `scene/test/test.tscn` and registers `SelectionSystem` and `CommandSystem` autoloads.
+This is a Godot 4.7 double-precision project. `project.godot` defines the main scene as `scene/system/solar/solar-system.tscn` (`uid://1o28alvotukx`) and registers `SelectionSystem` and `CommandSystem` autoloads.
 
 - `scene/` contains source scripts and scenes, grouped by feature: `vessel/`, `engine/`, `globe/`, `sim/`, `selection/`, `command/`, `system/solar/`, `ui/`, and `test/`.
-- `scene/test/` contains interactive harness scenes and camera helpers.
+- `scene/test/` contains lightweight harness scenes and camera helpers, such as `empty.tscn` and `camera_orbit.tscn`.
 - `doc/plan/` holds planning notes.
 - `export_presets.cfg` defines the Android export preset, with output under `target/`.
 - `.godot/`, `android/`, `model/`, `texture/`, `target/`, and `doc/` are ignored locally; coordinate before committing generated or large asset changes.
@@ -29,7 +29,7 @@ Use Godot's default GDScript style: tabs for indentation, `snake_case` for varia
 
 ## Testing Guidelines
 
-No dedicated unit-test framework is currently checked in. For each change, run the headless load check above and manually exercise the relevant harness, usually `scene/test/test.tscn` or `scene/sim/physics-harness.tscn`. Add new harness scenes or scripts under `scene/test/` when behavior is hard to validate from the main scene.
+No dedicated unit-test framework is currently checked in. For each change, run the headless load check above and manually exercise the relevant scene, usually the main solar-system scene or a focused harness under `scene/test/`. Add new harness scenes or scripts under `scene/test/` when behavior is hard to validate from the main scene.
 
 ## Commit & Pull Request Guidelines
 
