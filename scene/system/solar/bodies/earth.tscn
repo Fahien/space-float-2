@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://fbuj2aqj1wbf"]
 
 [ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="1_hw4fg"]
-[ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/globe/planet-model.gd" id="1_uho2q"]
+[ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/system/celestial-body-model.gd" id="1_uho2q"]
 [ext_resource type="PackedScene" uid="uid://c3x4fdu3o1dpa" path="res://scene/engine/lamae.tscn" id="3_o23ev"]
 [ext_resource type="PackedScene" uid="uid://ebcwe2nqwieb" path="res://model/flag-red.glb" id="3_q8l8h"]
 [ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="5_6egep"]

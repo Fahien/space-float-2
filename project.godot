@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 SelectionSystem="*uid://d0haacjjjmif3"
 CommandSystem="*uid://bv32dqbsgww0c"
+CelestialBodySystem="*uid://bjfg15qdmc8xd"
 
 [input]
 

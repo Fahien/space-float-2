@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bjtp1iqip2ey6"]
 
-[ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/globe/planet-model.gd" id="1_6wodc"]
+[ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/system/celestial-body-model.gd" id="1_6wodc"]
 [ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="1_mlmqn"]
 [ext_resource type="Texture2D" uid="uid://b4wna3da1jc5r" path="res://texture/moon-1k.png" id="2_6wodc"]
 
