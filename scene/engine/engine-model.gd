@@ -64,7 +64,6 @@ func _ready() -> void:
 		_sync_plume_visual(false)
 	update_configuration_warnings()
 	_update_info()
-	_update_mass()
 
 
 ## Keeps selection-panel fields fresh between physics steps.
@@ -216,10 +215,6 @@ func _sync_plume_visual(is_burning: bool) -> void:
 	plume.visible = is_burning
 
 
-func _update_mass():
-	mass = engine_mass + propellant_model.get_propellant_mass()
-
-
 ## Resolves one propulsion step, consuming propellant and returning the thrust
 ## magnitude that should be applied during that step.
 ##
@@ -242,8 +237,6 @@ func resolve_propulsion_step(delta: float) -> float:
 	var actual_burn := propellant_model.consume_propellant(delta, requested_flow)
 	if requested_burn <= 0.0 or actual_burn <= 0.0:
 		return 0.0
-
-	_update_mass()
 
 	var burn_fraction := actual_burn / requested_burn
 	return propulsion_model.get_thrust_magnitude(_throttle) * burn_fraction

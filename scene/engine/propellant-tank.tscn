@@ -9,7 +9,7 @@
 height = 0.5
 
 [node name="PropellantTank" type="RigidBody3D" unique_id=1836508573]
-mass = 0.001
+mass = 100.0
 script = ExtResource("1_j1vl0")
 dry_mass = 10.0
 propellant_mass = 90.0

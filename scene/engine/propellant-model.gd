@@ -2,10 +2,9 @@
 ##
 ## This is a `RigidBody3D` so the tank can exist as an authored scene node. The
 ## resource-only vessel harness uses `MassModel` instead.
-@tool
 class_name PropellantModel
 
-extends RigidBody3D
+extends GravityRigidBody3D
 
 
 @export
@@ -13,7 +12,7 @@ extends RigidBody3D
 var dry_mass: float = 0.0:
 	set(p_value):
 		dry_mass = maxf(p_value, 0.0)
-		mass = 0.0
+		_update_mass()
 
 
 @export
@@ -22,7 +21,7 @@ var dry_mass: float = 0.0:
 var propellant_mass: float = 0.0:
 	set(p_value):
 		propellant_mass = maxf(p_value, 0.0)
-		mass = 0.0
+		_update_mass()
 
 
 ## Returns the current total tank mass in kilograms.
@@ -44,4 +43,11 @@ func consume_propellant(delta: float, propellant_flow: float) -> float:
 
 	var propellant_consumed := minf(propellant_flow * delta, propellant_mass)
 	propellant_mass -= propellant_consumed
+
+	_update_mass()
+
 	return propellant_consumed
+
+
+func _update_mass():
+	mass = get_total_mass()

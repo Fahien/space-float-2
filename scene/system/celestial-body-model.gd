@@ -1,4 +1,3 @@
-@tool
 ## Simulation-layer environment model used by the standalone launch harness.
 ##
 ## `PlanetInfo` exists for multiplayer replication. `CelestialBodyModel` exists for
