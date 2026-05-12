@@ -1,48 +1,38 @@
-## Simulation-layer environment model used by the standalone launch harness.
+## Scene-authored celestial gravity source.
 ##
-## `PlanetInfo` exists for multiplayer replication. `CelestialBodyModel` exists for
-## the harness and answers physical questions such as gravity and altitude
-## without exposing scene details to the vessel controller.
+## Celestial body scenes attach this script to the node that marks the body's
+## current gravity center. When the node enters the tree, it registers with
+## `CelestialBodySystem`; affected rigid bodies then query the system for the
+## summed acceleration from every registered source.
 ##
-## The harness currently runs local Godot physics inside one scene-space
-## bubble while the analytic planet model lives in an Earth-centered inertial
-## space. Frame placement is handled separately by `SceneFrame`; this class
-## only answers inertial planet queries.
+## The model owns only static source parameters and local radial queries. It does
+## not move planets, solve orbits, stream terrain, or apply forces by itself.
+## Positions are interpreted in the same scene-space meter frame used by the
+## current physics step.
 class_name CelestialBodyModel
 
 extends Node3D
 
-## Human-readable planet identifier for inspector clarity and HUD/debug output.
+## Human-readable body identifier for inspector clarity and HUD/debug output.
 ##
-## This does not currently drive gameplay identity or multiplayer lookup; it is
-## authoring metadata for the local simulation harness.
+## This does not currently drive gameplay identity, registration, or save/load
+## lookup. Use it as authoring metadata only.
 @export var planet_name: String = "Unknown"
 
-## Planet center in inertial coordinates.
+## Mean body radius in scene-space meters.
 ##
-## Frame:
-## - simulation space
-## - meters
-##
-## The harness currently keeps Earth centered at the simulation origin, but the
-## property stays explicit so the analytic planet contract does not silently
-## depend on that one-body assumption.
-@export var center: Vector3 = Vector3.ZERO
-
-## Mean planet radius in simulation-space meters.
-##
-## This is used by gravity, altitude, surface-normal queries, and the render
-## layer's literal-scale globe placement. Changing it affects both simulation
-## and presentation.
-@export var radius: float = 0.0
+## Gravity uses this radius for the uniform-density interior approximation when a
+## queried point is inside the body. Altitude and up-vector helpers also use it
+## as the surface reference.
+@export_custom(PROPERTY_HINT_NONE, "suffix: m") var radius: float = 0.0
 
 ## Standard gravitational parameter μ = G·M in m³/s².
 ## Earth ≈ 3.986 × 10¹⁴. Using mu avoids carrying G and M separately and
-## is the standard parameterization for orbital mechanics.
+## keeps source data in the same units as force and rigid-body mass.
 ##
-## This is simulation-only state. It affects gravity queries directly and does
-## not by itself move any scene nodes.
-@export var mu: float = 0.0
+## This value controls acceleration returned by `acceleration_at(...)`; it does
+## not move this node or any other scene node by itself.
+@export_custom(PROPERTY_HINT_NONE, "suffix: m³/s²") var mu: float = 0.0
 
 
 func _enter_tree() -> void:
@@ -53,8 +43,21 @@ func _exit_tree() -> void:
 	CelestialBodySystem.unregister_source(self)
 
 
+## Returns the current gravity center in scene-space meters.
+##
+## Keeping this as a helper keeps all radial queries on one center contract if
+## later frame conversion or on-rails body motion needs to be inserted here.
+func _get_center() -> Vector3:
+	return global_position
+
+
+## Returns gravitational acceleration toward this source at `p_position`.
+##
+## Outside the body, acceleration follows μ * r / |r|³. Inside the configured
+## radius, the source uses a uniform-density sphere approximation so acceleration
+## approaches zero at the center instead of becoming singular.
 func acceleration_at(p_position: Vector3) -> Vector3:
-	var r: Vector3 = global_position - p_position
+	var r: Vector3 = _get_center() - p_position
 	var r2: float = r.length_squared()
 
 	if r2 <= 0.0:
@@ -74,27 +77,15 @@ func acceleration_at(p_position: Vector3) -> Vector3:
 	return r * (mu / (softened_r2 * softened_r))
 
 
-## Returns gravitational acceleration at a given position in inertial space.
-## The direction is radial toward the planet center, not a fixed global down.
-func get_gravity_at(p_position_inertial: Vector3) -> Vector3:
-	var offset := p_position_inertial - center
-	var r := offset.length()
-	if r <= 0.000001:
-		return Vector3.ZERO
-	var g_magnitude := mu / (r * r)
-	return -offset / r * g_magnitude
-
-
-## Returns the radial altitude above the planet surface at a given position in inertial space.
-func get_altitude_at(p_position_inertial: Vector3) -> float:
-	var r := (p_position_inertial - center).length()
+## Returns radial altitude above this body's mean surface.
+func get_altitude_at(p_position: Vector3) -> float:
+	var r := (p_position - _get_center()).length()
 	return r - radius
 
 
-## Returns the "up" direction at a given position in inertial space.
-## In the radial model this is the surface normal from the planet center.
-func get_up_at(p_position_inertial: Vector3) -> Vector3:
-	var offset := p_position_inertial - center
+## Returns the radial "up" direction away from this body's center.
+func get_up_at(p_position: Vector3) -> Vector3:
+	var offset := p_position - _get_center()
 	if offset.length_squared() <= 0.000001:
 		return Vector3.ZERO
 	return offset.normalized()

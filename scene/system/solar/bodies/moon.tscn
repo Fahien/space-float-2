@@ -11,7 +11,7 @@ albedo_texture = ExtResource("2_6wodc")
 script = ExtResource("1_6wodc")
 planet_name = "Moon"
 radius = 1737000.0
-mu = 4902.8
+mu = 4902800000000.0
 
 [node name="Globe" parent="." unique_id=493463791 instance=ExtResource("1_mlmqn")]
 transform = Transform3D(173.7, 0, 0, 0, 173.7, 0, 0, 0, 173.7, 0, 0, 0)

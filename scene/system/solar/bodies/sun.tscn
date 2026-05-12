@@ -37,7 +37,7 @@ shader_parameter/surface_displacement = 0.025
 script = ExtResource("1_t35bx")
 planet_name = "Sun"
 radius = 696000000.0
-mu = 132712440018.0
+mu = 1.32712440018e+20
 
 [node name="Globe" parent="." unique_id=493463791 instance=ExtResource("1_81i6o")]
 transform = Transform3D(696000000, 0, 0, 0, 696000000, 0, 0, 0, 696000000, 0, 0, 0)

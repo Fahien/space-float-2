@@ -34,7 +34,7 @@ func apply_gravity(p_state: PhysicsDirectBodyState3D) -> void:
 	var position = p_state.transform.origin
 	var acceleration = gravity_acceleration_at(position)
 
-	var force = mass * acceleration 
+	var force = mass * acceleration
 	p_state.apply_central_force(force)
 
 

@@ -207,7 +207,7 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 		# still happens in scene space. Once the frame can rotate, gravity
 		# must be brought back through the frame instead of being treated as if
 		# the two spaces were always axis-aligned.
-		var gravity_simulation: Vector3 = _planet_model.get_gravity_at(body_position)
+		var gravity_simulation: Vector3 = _planet_model.acceleration_at(body_position)
 		_gravity = gravity_simulation
 		_gravity_force = _gravity * current_mass
 		state.apply_central_force(_gravity_force)
