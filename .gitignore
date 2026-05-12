@@ -4,3 +4,6 @@ addons/
 android/
 target/
 doc/
+reports/
+__pycache__/
+*.pyc

@@ -6,6 +6,7 @@ This is a Godot 4.7 double-precision project. `project.godot` defines the main s
 
 - `scene/` contains source scripts and scenes, grouped by feature: `vessel/`, `engine/`, `globe/`, `sim/`, `selection/`, `command/`, `system/solar/`, `ui/`, and `test/`.
 - `scene/test/` contains lightweight harness scenes and camera helpers, such as `empty.tscn` and `camera_orbit.tscn`.
+- `tools/` contains project maintenance scripts, including the ignored GdUnit4 addon bootstrap.
 - `doc/plan/` holds planning notes.
 - `export_presets.cfg` defines the Android export preset, with output under `target/`.
 - `.godot/`, `android/`, `model/`, `texture/`, `target/`, and `doc/` are ignored locally; coordinate before committing generated or large asset changes.
@@ -16,13 +17,14 @@ Use the project Godot binary unless you are intentionally testing another editor
 
 ```bash
 test -x /Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64
+python3 tools/bootstrap_gdunit4.py
 /Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64 --headless --path . --quit
-/Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64 --headless --path . -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd
+/Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64 --headless --path . -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a res://test/unit
 /Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64 --path .
 /Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64 --headless --path . --export-debug Android target/space-float-2.apk
 ```
 
-The first command verifies the editor binary. The headless command checks that scenes and scripts load. The GdUnit4 command runs automated tests. The `--path .` command runs the main scene. The export command builds the Android preset when export templates and signing are configured.
+The first command verifies the editor binary. The bootstrap command installs the pinned GdUnit4 v6.1.3 addon into ignored `addons/gdUnit4` when it is missing; use `--force` to replace an existing addon. The headless command checks that scenes and scripts load. The GdUnit4 command runs automated tests under `res://test/unit`; without `--ignoreHeadlessMode -a res://test/unit`, the command only prints GdUnit help. The `--path .` command runs the main scene. The export command builds the Android preset when export templates and signing are configured.
 
 ## Coding Style & Naming Conventions
 
