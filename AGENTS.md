@@ -17,11 +17,12 @@ Use the project Godot binary unless you are intentionally testing another editor
 ```bash
 test -x /Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64
 /Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64 --headless --path . --quit
+/Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64 --headless --path . -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd
 /Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64 --path .
 /Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64 --headless --path . --export-debug Android target/space-float-2.apk
 ```
 
-The first command verifies the editor binary. The headless command checks that scenes and scripts load. The `--path .` command runs the main scene. The export command builds the Android preset when export templates and signing are configured.
+The first command verifies the editor binary. The headless command checks that scenes and scripts load. The GdUnit4 command runs automated tests. The `--path .` command runs the main scene. The export command builds the Android preset when export templates and signing are configured.
 
 ## Coding Style & Naming Conventions
 
@@ -29,7 +30,9 @@ Use Godot's default GDScript style: tabs for indentation, `snake_case` for varia
 
 ## Testing Guidelines
 
-No dedicated unit-test framework is currently checked in. For each change, run the headless load check above and manually exercise the relevant scene, usually the main solar-system scene or a focused harness under `scene/test/`. Add new harness scenes or scripts under `scene/test/` when behavior is hard to validate from the main scene.
+Use GdUnit4 as the first tier for automated tests. For each change, run the GdUnit4 command above when the touched code has test coverage, then run the headless load check and manually exercise the relevant scene when behavior depends on scene setup, rendering, input, or runtime interaction. Add or update GdUnit4 tests for logic that can be validated without a bespoke scene harness.
+
+Create new harness scenes or scripts under `scene/test/` only when they bring clear value that GdUnit4 tests or the main solar-system scene cannot provide, such as isolating camera behavior, rendering setup, or complex scene interactions. Keep harnesses lightweight and focused on behavior that is hard to validate from automated tests alone.
 
 ## Commit & Pull Request Guidelines
 

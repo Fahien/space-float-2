@@ -21,6 +21,10 @@ SelectionSystem="*uid://d0haacjjjmif3"
 CommandSystem="*uid://bv32dqbsgww0c"
 CelestialBodySystem="*uid://bjfg15qdmc8xd"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
+
 [input]
 
 ship_thrust_forward={
