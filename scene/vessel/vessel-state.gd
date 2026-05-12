@@ -76,10 +76,10 @@ func get_throttle() -> float:
 
 ## Desired actuator command in normalized pitch/yaw/roll space.
 func set_gimbal_command(p_gimbal_command: Vector3) -> void:
-	_gimbal_angles = Vector3(
-		clampf(p_gimbal_command.x, -1.0, 1.0) * GIMBAL_STRENGTH,
-		clampf(p_gimbal_command.y, -1.0, 1.0) * GIMBAL_STRENGTH,
-		clampf(p_gimbal_command.z, -1.0, 1.0) * GIMBAL_STRENGTH
+	_gimbal_command = Vector3(
+		clampf(p_gimbal_command.x, -1.0, 1.0),
+		clampf(p_gimbal_command.y, -1.0, 1.0),
+		clampf(p_gimbal_command.z, -1.0, 1.0)
 	)
 
 

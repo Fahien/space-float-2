@@ -50,4 +50,4 @@ func consume_propellant(delta: float, propellant_flow: float) -> float:
 
 
 func _update_mass():
-	mass = get_total_mass()
+	mass = maxf(get_total_mass(), 0.000001)
