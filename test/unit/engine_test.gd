@@ -58,6 +58,34 @@ func test_engine_model_resolves_propulsion_step_against_propellant_supply() -> v
 	assert_float(engine_model.resolve_propulsion_step(0.25)).is_zero()
 
 
+func test_engine_model_clears_reported_thrust_when_throttle_released() -> void:
+	var propellant_model := auto_free(PropellantModel.new()) as PropellantModel
+	propellant_model.propellant_mass = 10.0
+
+	var propulsion_model := PropulsionModel.new()
+	propulsion_model.max_thrust_newtons = 100.0
+	propulsion_model.max_propellant_flow_kg_per_s = 1.0
+
+	var info := auto_free(Selectable3DInfo.new()) as Selectable3DInfo
+	var engine_model := auto_free(EngineModel.new()) as EngineModel
+	engine_model.propellant_model = propellant_model
+	engine_model.propulsion_model = propulsion_model
+	engine_model.info = info
+
+	engine_model.set_throttle(1.0)
+	engine_model._cache_thrust_force(engine_model.resolve_propulsion_step(0.25), Basis.IDENTITY)
+	engine_model._update_info()
+
+	var burning_thrust: Vector3 = info.info["thrust"]
+	assert_float(burning_thrust.length()).is_greater(0.0)
+
+	engine_model.set_throttle(0.0)
+	engine_model._cache_thrust_force(engine_model.resolve_propulsion_step(0.25), Basis.IDENTITY)
+	engine_model._update_info()
+
+	assert_vector(info.info["thrust"]).is_equal(Vector3.ZERO)
+
+
 func test_engine_model_slews_gimbal_angles() -> void:
 	var propulsion_model := PropulsionModel.new()
 	propulsion_model.max_gimbal_pitch_degrees = 10.0

@@ -89,12 +89,8 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 	resolve_gimbal_step(state.step)
 	var thrust_magnitude := resolve_propulsion_step(state.step)
 	_sync_plume_visual(thrust_magnitude > 0.0)
-	if thrust_magnitude > 0.0:
-		var thrust_dir := (
-			state.transform.basis
-			* get_actual_thrust_direction_local()
-		).normalized()
-		_thrust_force = thrust_dir * thrust_magnitude
+	_cache_thrust_force(thrust_magnitude, state.transform.basis)
+	if _thrust_force.length_squared() > 0.0:
 		state.apply_force(_thrust_force)
 
 
@@ -213,6 +209,18 @@ func _sync_plume_visual(is_burning: bool) -> void:
 		gimbal_basis * _plume_neutral_transform.origin
 	)
 	plume.visible = is_burning
+
+
+func _cache_thrust_force(thrust_magnitude: float, body_basis: Basis) -> void:
+	if thrust_magnitude <= 0.0:
+		_thrust_force = Vector3.ZERO
+		return
+
+	var thrust_dir := (
+		body_basis
+		* get_actual_thrust_direction_local()
+	).normalized()
+	_thrust_force = thrust_dir * thrust_magnitude
 
 
 ## Resolves one propulsion step, consuming propellant and returning the thrust
