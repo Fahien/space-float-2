@@ -8,7 +8,7 @@
 ## makes each commanded burn possible.
 ##
 ## Gravity arrives first. Each physics step asks `CelestialBodySystem` to apply
-## the summed pull of every registered `CelestialBodyModel`, then caches the
+## the summed pull of every registered `CelestialBody3D`, then caches the
 ## strongest source through `current_primary`. That cache does not decide the
 ## force law; it gives pilots, debug panels, cameras, and future atmosphere code
 ## the name of the body whose local environment matters most.

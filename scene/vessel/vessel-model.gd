@@ -91,7 +91,7 @@ var _drag: Vector3 = Vector3.ZERO
 var _thruster_active: bool = false
 
 ## Environment model used to resolve simulation-space gravity and altitude.
-var _planet_model: CelestialBodyModel = null
+var _planet_model: CelestialBody3D = null
 
 @onready var _velocity_vector := $Debug/VelocityVector
 @onready var _thrust_vector := $Debug/ThrustVector
@@ -182,7 +182,7 @@ func is_thruster_active() -> bool:
 
 
 ## Injects the environment model used by the standalone launch harness.
-func set_planet_model(p_planet_model: CelestialBodyModel) -> void:
+func set_planet_model(p_planet_model: CelestialBody3D) -> void:
 	_planet_model = p_planet_model
 
 

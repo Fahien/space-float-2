@@ -9,7 +9,7 @@
 ## not move planets, solve orbits, stream terrain, or apply forces by itself.
 ## Positions are interpreted in the same scene-space meter frame used by the
 ## current physics step.
-class_name CelestialBodyModel
+class_name CelestialBody3D
 
 extends Node3D
 

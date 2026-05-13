@@ -9,7 +9,7 @@
 ## The class registers itself with `CelestialBodySystem` when it enters the
 ## scene tree and unregisters when it leaves. During physics integration it asks
 ## the system to apply the full gravitational acceleration from every registered
-## `CelestialBodyModel`. At the same time, the system records the strongest
+## `CelestialBody3D`. At the same time, the system records the strongest
 ## current source in `current_primary`, giving UI, camera, atmosphere, and later
 ## drag code a stable answer to the local-environment question.
 ##
@@ -28,7 +28,7 @@ extends RigidBody3D
 ## Gravity itself remains a superposition of all valid sources. This cache is
 ## environmental context: the body most useful for local down, atmosphere,
 ## debug readouts, and future frame-of-reference work.
-var current_primary: CelestialBodyModel = null
+var current_primary: CelestialBody3D = null
 
 
 func _enter_tree() -> void:

@@ -90,7 +90,7 @@ func test_engine_model_reports_current_primary_body_name() -> void:
 	var propellant_model := auto_free(PropellantModel.new()) as PropellantModel
 	var info := auto_free(Selectable3DInfo.new()) as Selectable3DInfo
 	var engine_model := auto_free(EngineModel.new()) as EngineModel
-	var body := auto_free(CelestialBodyModel.new()) as CelestialBodyModel
+	var body := auto_free(CelestialBody3D.new()) as CelestialBody3D
 	body.name = "Earth"
 	engine_model.propellant_model = propellant_model
 	engine_model.info = info

@@ -6,7 +6,7 @@
 ## rigid bodies ask for the summed acceleration that belongs at their current
 ## point in space. `CelestialBodySystem` is that instrument.
 ##
-## The system has two ledgers. `CelestialBodyModel` nodes enter the source
+## The system has two ledgers. `CelestialBody3D` nodes enter the source
 ## ledger and provide radial acceleration fields. `GravityRigidBody3D` nodes
 ## enter the body ledger so the environment path can later grow from gravity
 ## into atmosphere, drag, wind, and frame-context updates. The immediate
@@ -20,16 +20,16 @@
 ## body readouts, and later planet-owned atmosphere queries.
 extends Node
 
-var _sources: Array[CelestialBodyModel] = []
+var _sources: Array[CelestialBody3D] = []
 var _bodies: Array[GravityRigidBody3D] = []
 
 
-func register_source(p_body: CelestialBodyModel) -> void:
+func register_source(p_body: CelestialBody3D) -> void:
 	if p_body != null and not _sources.has(p_body):
 		_sources.push_back(p_body)
 
 
-func unregister_source(p_body: CelestialBodyModel) -> void:
+func unregister_source(p_body: CelestialBody3D) -> void:
 	if p_body != null and _sources.has(p_body):
 		_sources.erase(p_body)
 
@@ -87,8 +87,8 @@ func gravity_acceleration_at(p_position: Vector3) -> Vector3:
 ##
 ## This is an environment-selection helper, not a gravity switch. Force
 ## integration still uses `gravity_acceleration_at(...)`.
-func strongest_source_at(p_position: Vector3) -> CelestialBodyModel:
-	var best: CelestialBodyModel = null
+func strongest_source_at(p_position: Vector3) -> CelestialBody3D:
+	var best: CelestialBody3D = null
 	var best_a2: float = 0.0
 
 	for source in _sources:

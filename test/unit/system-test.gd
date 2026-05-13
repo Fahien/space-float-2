@@ -69,7 +69,7 @@ func test_celestial_body_system_strongest_source_selects_largest_acceleration() 
 func test_celestial_body_system_strongest_source_ignores_null_and_invalid_sources() -> void:
 	var system: Variant = auto_free(CelestialBodySystemScript.new())
 
-	var invalid_source := CelestialBodyModel.new()
+	var invalid_source := CelestialBody3D.new()
 	system.register_source(null)
 	system.register_source(invalid_source)
 	invalid_source.free()
@@ -108,8 +108,8 @@ func test_gravity_rigid_body_caches_current_primary_during_physics_step() -> voi
 	assert_object(body.current_primary).is_same(source)
 
 
-func _body_in_tree(p_position: Vector3, p_radius: float, p_mu: float) -> CelestialBodyModel:
-	var body := auto_free(CelestialBodyModel.new()) as CelestialBodyModel
+func _body_in_tree(p_position: Vector3, p_radius: float, p_mu: float) -> CelestialBody3D:
+	var body := auto_free(CelestialBody3D.new()) as CelestialBody3D
 	add_child(body)
 	body.global_position = p_position
 	body.radius = p_radius
