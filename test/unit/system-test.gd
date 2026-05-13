@@ -54,6 +54,60 @@ func test_celestial_body_system_registers_sources_once_and_sums_acceleration() -
 	)
 
 
+func test_celestial_body_system_strongest_source_selects_largest_acceleration() -> void:
+	var system: Variant = auto_free(CelestialBodySystemScript.new())
+
+	var weak_near_source := _body_in_tree(Vector3(10.0, 0.0, 0.0), 0.0, 100.0)
+	var strong_far_source := _body_in_tree(Vector3(0.0, 20.0, 0.0), 0.0, 800.0)
+
+	system.register_source(weak_near_source)
+	system.register_source(strong_far_source)
+
+	assert_object(system.strongest_source_at(Vector3.ZERO)).is_same(strong_far_source)
+
+
+func test_celestial_body_system_strongest_source_ignores_null_and_invalid_sources() -> void:
+	var system: Variant = auto_free(CelestialBodySystemScript.new())
+
+	var invalid_source := CelestialBodyModel.new()
+	system.register_source(null)
+	system.register_source(invalid_source)
+	invalid_source.free()
+
+	assert_object(system.strongest_source_at(Vector3.ZERO)).is_null()
+
+
+func test_celestial_body_system_local_down_uses_gravity_direction() -> void:
+	var system: Variant = auto_free(CelestialBodySystemScript.new())
+	var body := _body_in_tree(Vector3(10.0, 0.0, 0.0), 0.0, 100.0)
+
+	system.register_source(body)
+
+	assert_vector(system.local_down_at(Vector3.ZERO)).is_equal_approx(
+		Vector3.RIGHT,
+		Vector3(0.000001, 0.000001, 0.000001)
+	)
+
+
+func test_celestial_body_system_local_down_falls_back_without_gravity() -> void:
+	var system: Variant = auto_free(CelestialBodySystemScript.new())
+
+	assert_vector(system.local_down_at(Vector3.ZERO)).is_equal(Vector3.DOWN)
+
+
+func test_gravity_rigid_body_caches_current_primary_during_physics_step() -> void:
+	var source := _body_in_tree(Vector3(10.0, 0.0, 0.0), 0.0, 100.0)
+	var body := auto_free(GravityRigidBody3D.new()) as GravityRigidBody3D
+	body.mass = 1.0
+	add_child(body)
+	body.global_position = Vector3.ZERO
+
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
+	assert_object(body.current_primary).is_same(source)
+
+
 func _body_in_tree(p_position: Vector3, p_radius: float, p_mu: float) -> CelestialBodyModel:
 	var body := auto_free(CelestialBodyModel.new()) as CelestialBodyModel
 	add_child(body)

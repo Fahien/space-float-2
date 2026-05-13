@@ -50,6 +50,26 @@ For project scripts, use `-s` with a `res://` script path from the project root:
 
 If a task requires opening the editor UI, request approval before launching the GUI app.
 
+## GdUnit4 Tests
+
+Use GdUnit4 as the first automated validation tier when touched logic can be tested without bespoke rendering, input, or scene-runtime setup. Tests live under `res://test/unit`.
+
+If `addons/gdUnit4` is missing, install the pinned addon before running tests:
+
+```bash
+python3 tools/bootstrap_gdunit4.py
+```
+
+Run the project unit tests with:
+
+```bash
+/Users/fahien/Workspace/godot/engine/bin/godot.macos.editor.double.arm64 --headless --path . -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a res://test/unit
+```
+
+Include `--ignoreHeadlessMode` and `-a res://test/unit`; without them the command may only print GdUnit help. Run this command after logic changes that have test coverage, and add or update focused GdUnit4 tests for deterministic script/resource behavior.
+
+Use lightweight harness scenes under `scene/test/` only when the behavior is difficult to validate through GdUnit4, such as camera setup, rendering, input, or complex scene interactions.
+
 ## Reporting
 
 In final responses, include the exact Godot command run and summarize any load, parse, or test failures. If validation is skipped, state why.

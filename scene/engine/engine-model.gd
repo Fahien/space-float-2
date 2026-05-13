@@ -1,7 +1,23 @@
-## Rigid-body adapter for a standalone engine assembly.
+## Chapter: The Engine as a Flying Instrument
 ##
-## `PropulsionModel` provides immutable tuning, while `PropellantModel` owns
-## the mutable tank state consumed by this engine at runtime.
+## The active propulsion path begins with an ordinary scene object: a
+## `RigidBody3D` that can fall through the solar system, carry a tank, turn its
+## thrust vector, and report what is happening to the selection UI. `EngineModel`
+## is that adapter. It binds the abstract contract in `PropulsionModel` to a
+## specific engine scene and lets `PropellantModel` account for the fuel that
+## makes each commanded burn possible.
+##
+## Gravity arrives first. Each physics step asks `CelestialBodySystem` to apply
+## the summed pull of every registered `CelestialBodyModel`, then caches the
+## strongest source through `current_primary`. That cache does not decide the
+## force law; it gives pilots, debug panels, cameras, and future atmosphere code
+## the name of the body whose local environment matters most.
+##
+## Propulsion follows the environment step. Throttle becomes requested thrust,
+## tank state limits the burn, gimbal commands slew toward physical pitch and
+## yaw angles, and the plume mirrors the resolved actuator basis. The older
+## `scene/vessel` path may still preserve useful ideas, but this file is the
+## working chapter of the standalone engine assembly.
 class_name EngineModel
 
 extends GravityRigidBody3D
@@ -85,7 +101,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 
 func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
-	CelestialBodySystem.apply_gravity(state)
+	CelestialBodySystem.apply_gravity(self, state)
 	resolve_gimbal_step(state.step)
 	var thrust_magnitude := resolve_propulsion_step(state.step)
 	_sync_plume_visual(thrust_magnitude > 0.0)
@@ -106,6 +122,9 @@ func _update_info() -> void:
 	info.info["thrust"] = _thrust_force
 	info.info["gimbal"] = _gimbal
 	info.info["gimbal_angles"] = _gimbal_angles
+	info.info["celestial_body"] = "None"
+	if current_primary != null:
+		info.info["celestial_body"] = current_primary.name
 
 
 func get_total_mass() -> float:

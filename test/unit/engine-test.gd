@@ -86,6 +86,25 @@ func test_engine_model_clears_reported_thrust_when_throttle_released() -> void:
 	assert_vector(info.info["thrust"]).is_equal(Vector3.ZERO)
 
 
+func test_engine_model_reports_current_primary_body_name() -> void:
+	var propellant_model := auto_free(PropellantModel.new()) as PropellantModel
+	var info := auto_free(Selectable3DInfo.new()) as Selectable3DInfo
+	var engine_model := auto_free(EngineModel.new()) as EngineModel
+	var body := auto_free(CelestialBodyModel.new()) as CelestialBodyModel
+	body.name = "Earth"
+	engine_model.propellant_model = propellant_model
+	engine_model.info = info
+
+	engine_model._update_info()
+
+	assert_str(info.info["celestial_body"]).is_equal("None")
+
+	engine_model.current_primary = body
+	engine_model._update_info()
+
+	assert_str(info.info["celestial_body"]).is_equal("Earth")
+
+
 func test_engine_model_slews_gimbal_angles() -> void:
 	var propulsion_model := PropulsionModel.new()
 	propulsion_model.max_gimbal_pitch_degrees = 10.0
