@@ -4,10 +4,16 @@
 [ext_resource type="PackedScene" uid="uid://d3uw88kymxrky" path="res://scene/engine/lemae-engine.tscn" id="1_rkxnl"]
 [ext_resource type="Script" uid="uid://debbbv5vsy3y5" path="res://scene/sim/aerodynamics-model.gd" id="2_tnt4q"]
 [ext_resource type="PackedScene" uid="uid://bp368ab2thy5" path="res://scene/engine/propellant-tank.tscn" id="2_vrnsk"]
+[ext_resource type="Script" uid="uid://r13biy7i0iye" path="res://scene/selection/selectable-3d.gd" id="3_6gmbg"]
+[ext_resource type="Script" uid="uid://0gr43c5yvaqv" path="res://scene/selection/selectable-3d-info.gd" id="3_xp77y"]
+[ext_resource type="Script" uid="uid://rqhsv3xpp2st" path="res://scene/command/vessel-command-receiver.gd" id="4_vcr"]
 
 [sub_resource type="Resource" id="Resource_tnt4q"]
 script = ExtResource("2_tnt4q")
 metadata/_custom_type_script = "uid://debbbv5vsy3y5"
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_vessel"]
+radius = 1.5
 
 [node name="Lamae" type="RigidBody3D" unique_id=2118705930]
 mass = 200.0
@@ -17,7 +23,28 @@ aerodynamics_model = SubResource("Resource_tnt4q")
 
 [node name="LemaeEngine" parent="." unique_id=464772022 node_paths=PackedStringArray("propellant_model") instance=ExtResource("1_rkxnl")]
 propellant_model = NodePath("../PropellantTank")
-engine_mass = null
+engine_mass = 100.0
 
 [node name="PropellantTank" parent="." unique_id=1836508573 instance=ExtResource("2_vrnsk")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+
+[node name="Info" type="Node" parent="." unique_id=1550759649]
+script = ExtResource("3_xp77y")
+
+[node name="VesselCommandReceiver" type="Node" parent="." unique_id=1487013330 node_paths=PackedStringArray("info")]
+script = ExtResource("4_vcr")
+info = NodePath("../Info")
+
+[node name="Selectable3D" type="Area3D" parent="." unique_id=687277483 node_paths=PackedStringArray("anchor", "command_receiver", "info")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 0)
+script = ExtResource("3_6gmbg")
+anchor = NodePath("Anchor")
+command_receiver = NodePath("../VesselCommandReceiver")
+info = NodePath("../Info")
+metadata/_custom_type_script = "uid://r13biy7i0iye"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Selectable3D" unique_id=17356793]
+shape = SubResource("SphereShape3D_vessel")
+
+[node name="Anchor" type="Node3D" parent="Selectable3D" unique_id=1349537033]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)

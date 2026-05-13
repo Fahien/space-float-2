@@ -3,9 +3,6 @@
 [ext_resource type="Script" uid="uid://b45uh68xr7oil" path="res://scene/engine/engine-model.gd" id="1_kowjs"]
 [ext_resource type="PackedScene" uid="uid://xokdgimkf8l6" path="res://model/rocket_baseA.glb" id="1_yaa15"]
 [ext_resource type="Script" uid="uid://cwu6natuhnirq" path="res://scene/engine/propulsion-model.gd" id="2_iny3f"]
-[ext_resource type="Script" uid="uid://r13biy7i0iye" path="res://scene/selection/selectable-3d.gd" id="3_6gmbg"]
-[ext_resource type="Script" uid="uid://0gr43c5yvaqv" path="res://scene/selection/selectable-3d-info.gd" id="3_xp77y"]
-[ext_resource type="Script" uid="uid://ba5egfqt32co" path="res://scene/command/engine-command-receiver.gd" id="4_3hl4c"]
 [ext_resource type="Shader" uid="uid://ct2norb4philf" path="res://scene/engine/thruster.gdshader" id="5_2cl03"]
 [ext_resource type="Texture2D" uid="uid://dr808lua13mut" path="res://texture/perlin-noise-small.png" id="6_onl8b"]
 
@@ -17,9 +14,6 @@ script = ExtResource("2_iny3f")
 max_thrust_newtons = 16000.0
 gimbal_slew_degrees_per_second = 5.0
 metadata/_custom_type_script = "uid://cwu6natuhnirq"
-
-[sub_resource type="SphereShape3D" id="SphereShape3D_3hl4c"]
-radius = 1.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_onl8b"]
 render_priority = 0
@@ -64,38 +58,17 @@ rings = 0
 cap_top = false
 cap_bottom = false
 
-[node name="LemaeEngine" type="CollisionShape3D" unique_id=464772022 node_paths=PackedStringArray("plume", "info")]
+[node name="LemaeEngine" type="CollisionShape3D" unique_id=464772022 node_paths=PackedStringArray("plume")]
 shape = SubResource("CylinderShape3D_b5lh5")
 script = ExtResource("1_kowjs")
 propulsion_model = SubResource("Resource_xp77y")
 plume = NodePath("Plume")
-info = NodePath("Info")
 thrust_origin_local = Vector3(0, -0.25, 0)
 engine_mass = null
-
-[node name="Info" type="Node" parent="." unique_id=853443548]
-script = ExtResource("3_xp77y")
 
 [node name="rocket_baseA2" parent="." unique_id=2057328868 instance=ExtResource("1_yaa15")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.5, -1.5)
 
-[node name="Selectable3D" type="Area3D" parent="." unique_id=1484557443 node_paths=PackedStringArray("anchor", "command_receiver", "info")]
-script = ExtResource("3_6gmbg")
-anchor = NodePath("Anchor")
-command_receiver = NodePath("../CommandReceiver")
-info = NodePath("../Info")
-metadata/_custom_type_script = "uid://r13biy7i0iye"
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Selectable3D" unique_id=695016002]
-shape = SubResource("SphereShape3D_3hl4c")
-
-[node name="Anchor" type="Node3D" parent="Selectable3D" unique_id=681103454]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-
-[node name="CommandReceiver" type="Node3D" parent="." unique_id=1460482187 node_paths=PackedStringArray("engine_model")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
-script = ExtResource("4_3hl4c")
-engine_model = NodePath("..")
 
 [node name="Plume" type="MeshInstance3D" parent="." unique_id=1225193478]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.25, 0)

@@ -1,25 +1,27 @@
 ## Chapter: The Engine as a Flying Instrument
 ##
-## The active propulsion path now lives inside a single parent vessel body.
-## `EngineModel` is no longer the craft that falls through the solar system; it
-## is the authored engine component bolted into that craft. As a `MassModel`, it
-## contributes dry hardware mass to the vessel ledger. In the LAMAE scene, the
-## script is attached to a `CollisionShape3D` root, so the same authored
-## component can also supply shape data to the compound rigid body without
-## becoming a second rigid body.
+## Early prototypes gave each engine its own rigid body, its own gravity pass,
+## and its own selection-panel output. The craft was a small constellation of
+## physics objects held together by joints. That architecture broke down as soon
+## as the simulation needed a single mass ledger for orbit mechanics and
+## aerodynamics: joints introduced constraint jitter, and every component had to
+## duplicate the celestial-gravity query that should happen once per vessel.
 ##
-## The flight sequence belongs to `VesselRigidBody3D`. Each physics step, the
-## vessel applies celestial gravity once, asks child engines to resolve gimbal
-## motion and propellant-limited thrust, then applies the returned force at the
-## component's offset from the vessel center. The engine still owns the details
-## that make a command physical: throttle clamping, tank drawdown, actuator slew,
-## plume deflection, and selection-panel reporting.
+## The current design treats the engine as authored hardware bolted into a parent
+## vessel. `EngineModel` extends `MassModel`, contributing dry hardware mass to
+## the vessel's mass ledger. In the LAMAE scene the script is attached to a
+## `CollisionShape3D`, so the same component supplies shape data to the compound
+## rigid body without becoming a second one. The flight sequence belongs to
+## `VesselRigidBody3D`: each physics step the vessel applies celestial gravity
+## once, then asks each child engine to resolve gimbal motion and
+## propellant-limited thrust, and finally applies the returned force at the
+## component's offset from the vessel center.
 ##
-## This split is the migration line between the early multi-rigid-body assembly
-## and the current compound body. Engine scenes keep the visible machinery,
-## selection data, propellant link, and propulsion rules, while the vessel root
-## keeps the single Jolt body that collisions, gravity, mass, and vessel-level
-## atmosphere forces act on.
+## The engine owns the details that make a command physical — throttle clamping,
+## tank drawdown, actuator slew, and plume deflection — but it no longer owns
+## the pilot-facing reporting loop. Selection-panel output and command fanout
+## moved to `VesselCommandReceiver`, a vessel-level node that aggregates engine
+## state across the craft and keeps the HUD current between physics steps.
 class_name EngineModel
 
 extends MassModel
@@ -50,7 +52,9 @@ var plume: MeshInstance3D = null:
 		update_configuration_warnings()
 
 @export
-## Optional selection panel data source updated from this engine's runtime state.
+## Optional selection panel data source. Reporting is handled by the
+## vessel-level `VesselCommandReceiver`; this reference is retained so the
+## engine can be wired in the editor and validated by configuration warnings.
 var info: Selectable3DInfo = null:
 	set(p_info):
 		info = p_info
@@ -91,12 +95,6 @@ func _ready() -> void:
 		_plume_neutral_transform = plume.transform
 		_sync_plume_visual(false)
 	update_configuration_warnings()
-	_update_info()
-
-
-## Keeps selection-panel fields fresh between physics steps.
-func _process(_delta: float) -> void:
-	_update_info()
 
 
 func _get_configuration_warnings() -> PackedStringArray:
@@ -130,28 +128,6 @@ func resolve_vessel_force(delta: float, body_transform: Transform3D) -> Vector3:
 func get_vessel_force_offset(body_transform: Transform3D) -> Vector3:
 	var local_offset := transform.origin + transform.basis * thrust_origin_local
 	return body_transform.basis * local_offset
-
-
-func _update_info() -> void:
-	if info == null:
-		return
-
-	info.info["name"] = name
-	info.info["total_mass"] = get_total_mass()
-	info.info["propellant_mass"] = get_propellant_mass()
-	info.info["speed"] = 0.0
-	info.info["throttle"] = _throttle
-	info.info["thrust"] = _thrust_force
-	info.info["gimbal"] = _gimbal
-	info.info["gimbal_angles"] = _gimbal_angles
-	info.info["celestial_body"] = "None"
-
-	var vessel := get_vessel_body()
-	if vessel != null:
-		info.info["total_mass"] = vessel.get_total_mass()
-		info.info["speed"] = vessel.linear_velocity.length()
-		if vessel.current_primary != null:
-			info.info["celestial_body"] = vessel.current_primary.name
 
 
 func get_total_mass() -> float:

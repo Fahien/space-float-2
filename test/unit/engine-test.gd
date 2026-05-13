@@ -1,17 +1,31 @@
-## Chapter: Engine Tests for the Single-Body Vessel
+## Chapter: Proving the Single-Body Vessel
 ##
-## These tests mark the boundary between the old engine-as-rigid-body prototype
-## and the current component model. They keep the propulsion contract honest:
-## commands still clamp throttle and gimbal input, fuel still limits thrust,
-## selection data still reports the vessel's environment, and the authored LAMAE
-## scene now contains exactly one rigid body.
+## These tests mark the boundary between the early engine-as-rigid-body
+## prototype and the current compound-body design. They guard every contract
+## that changed when the architecture collapsed multiple rigid bodies into one
+## `VesselRigidBody3D` with child `MassModel` components.
 ##
-## The suite is intentionally close to the public script API. A future refactor
-## may change visuals or scene nesting, but it should preserve the same outcomes:
-## component dry mass stays separate from tank mass, propellant burn updates the
-## vessel mass ledger, engine thrust resolves through the vessel mount frame,
-## throttle wakes a sleeping parent body, and no joint is required for the engine
-## and tank to fly as one craft.
+## The first group of cases covers the mass ledger: component dry mass stays
+## separate from tank mass, the vessel aggregates only direct `MassModel`
+## children, center of mass shifts with component placement, and propellant
+## burn updates the vessel's total mass in real time.
+##
+## The propulsion cases verify that throttle clamps to [0, 1], gimbal commands
+## clamp per axis, fuel limits thrust proportionally when the tank runs dry
+## partway through a step, and the mount-frame transform converts local thrust
+## into the correct scene-space force and offset.
+##
+## A third group tests `VesselCommandReceiver`, the vessel-level node that
+## replaced per-engine command wiring. The receiver discovers engines from its
+## parent, fans `EngineCommand` payloads to every active engine, ignores
+## unrelated command types, and respects a manually narrowed engine subset for
+## staging transitions.
+##
+## The final integration cases load the authored LAMAE scene and assert the
+## structural invariants: exactly one rigid body, zero joints, vessel-level
+## selectable and command receiver wired to a shared `Selectable3DInfo`, and
+## component masses that sum correctly and track propellant consumption through
+## the vessel's Jolt body.
 extends GdUnitTestSuite
 
 
@@ -135,7 +149,7 @@ func test_engine_model_resolves_propulsion_step_against_propellant_supply() -> v
 	assert_float(engine_model.resolve_propulsion_step(0.25)).is_zero()
 
 
-func test_engine_model_clears_reported_thrust_when_throttle_released() -> void:
+func test_vessel_command_receiver_updates_info_with_throttle_state() -> void:
 	var propellant_model := auto_free(PropellantModel.new()) as PropellantModel
 	propellant_model.propellant_mass = 10.0
 
@@ -143,45 +157,76 @@ func test_engine_model_clears_reported_thrust_when_throttle_released() -> void:
 	propulsion_model.max_thrust_newtons = 100.0
 	propulsion_model.max_propellant_flow_kg_per_s = 1.0
 
-	var info := auto_free(Selectable3DInfo.new()) as Selectable3DInfo
-	var engine_model := auto_free(EngineModel.new()) as EngineModel
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
+	var engine_model := EngineModel.new()
 	engine_model.propellant_model = propellant_model
 	engine_model.propulsion_model = propulsion_model
-	engine_model.info = info
+	vessel.add_child(engine_model)
+
+	var info := auto_free(Selectable3DInfo.new()) as Selectable3DInfo
+	var receiver := VesselCommandReceiver.new()
+	receiver.info = info
+	vessel.add_child(receiver)
 
 	engine_model.set_throttle(1.0)
-	engine_model._cache_thrust_force(engine_model.resolve_propulsion_step(0.25), Basis.IDENTITY)
-	engine_model._update_info()
+	engine_model.set_gimbal(Vector3(0.5, -0.3, 0.0))
+	receiver._update_info()
 
-	var burning_thrust: Vector3 = info.info["thrust"]
-	assert_float(burning_thrust.length()).is_greater(0.0)
+	assert_float(info.info["throttle"]).is_equal_approx(1.0, 0.000001)
+	assert_vector(info.info["gimbal"]).is_equal(Vector2(0.5, -0.3))
 
 	engine_model.set_throttle(0.0)
-	engine_model._cache_thrust_force(engine_model.resolve_propulsion_step(0.25), Basis.IDENTITY)
-	engine_model._update_info()
+	receiver._update_info()
 
-	assert_vector(info.info["thrust"]).is_equal(Vector3.ZERO)
+	assert_float(info.info["throttle"]).is_zero()
 
 
-func test_engine_model_reports_current_primary_body_name() -> void:
-	var propellant_model := auto_free(PropellantModel.new()) as PropellantModel
-	var info := auto_free(Selectable3DInfo.new()) as Selectable3DInfo
-	var vessel = auto_free(VesselRigidBody3D.new())
+func test_vessel_command_receiver_reports_current_primary_body_name() -> void:
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
 	var engine_model := EngineModel.new()
+	vessel.add_child(engine_model)
+
+	var info := auto_free(Selectable3DInfo.new()) as Selectable3DInfo
+	var receiver := VesselCommandReceiver.new()
+	receiver.info = info
+	vessel.add_child(receiver)
+
 	var body := auto_free(CelestialBody3D.new()) as CelestialBody3D
 	body.name = "Earth"
-	vessel.add_child(engine_model)
-	engine_model.propellant_model = propellant_model
-	engine_model.info = info
 
-	engine_model._update_info()
+	receiver._update_info()
 
 	assert_str(info.info["celestial_body"]).is_equal("None")
 
 	vessel.current_primary = body
-	engine_model._update_info()
+	receiver._update_info()
 
 	assert_str(info.info["celestial_body"]).is_equal("Earth")
+
+
+func test_vessel_command_receiver_aggregates_propellant_mass_in_info() -> void:
+	var tank_a := auto_free(PropellantModel.new()) as PropellantModel
+	tank_a.propellant_mass = 20.0
+	var tank_b := auto_free(PropellantModel.new()) as PropellantModel
+	tank_b.propellant_mass = 30.0
+
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
+	var engine_a := EngineModel.new()
+	engine_a.propellant_model = tank_a
+	var engine_b := EngineModel.new()
+	engine_b.propellant_model = tank_b
+	vessel.add_child(engine_a)
+	vessel.add_child(engine_b)
+
+	var info := auto_free(Selectable3DInfo.new()) as Selectable3DInfo
+	var receiver := VesselCommandReceiver.new()
+	receiver.info = info
+	vessel.add_child(receiver)
+
+	receiver._update_info()
+
+	assert_float(info.info["propellant_mass"]).is_equal_approx(50.0, 0.000001)
+	assert_str(info.info["name"]).is_equal(vessel.name)
 
 
 func test_engine_model_slews_gimbal_angles() -> void:
@@ -292,6 +337,91 @@ func test_engine_model_wakes_parent_vessel_when_throttle_opens() -> void:
 	engine_model.set_throttle(1.0)
 
 	assert_bool(vessel.sleeping).is_false()
+
+
+func test_vessel_command_receiver_discovers_engines_from_parent() -> void:
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
+	var engine_a := EngineModel.new()
+	var engine_b := EngineModel.new()
+	var tank := FixedMassModel.new()
+	vessel.add_child(engine_a)
+	vessel.add_child(engine_b)
+	vessel.add_child(tank)
+
+	var receiver := VesselCommandReceiver.new()
+	vessel.add_child(receiver)
+
+	assert_int(receiver.get_active_engines().size()).is_equal(2)
+	assert_object(receiver.get_active_engines()[0]).is_same(engine_a)
+	assert_object(receiver.get_active_engines()[1]).is_same(engine_b)
+
+
+func test_vessel_command_receiver_fans_engine_commands_to_active_engines() -> void:
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
+	var engine_a := EngineModel.new()
+	var engine_b := EngineModel.new()
+	vessel.add_child(engine_a)
+	vessel.add_child(engine_b)
+
+	var receiver := VesselCommandReceiver.new()
+	vessel.add_child(receiver)
+
+	receiver.receive_command(EngineCommand.new(0.8, Vector3(0.5, -0.3, 0.0)))
+
+	assert_float(engine_a.get_throttle()).is_equal_approx(0.8, 0.000001)
+	assert_vector(engine_a.get_gimbal()).is_equal(Vector2(0.5, -0.3))
+	assert_float(engine_b.get_throttle()).is_equal_approx(0.8, 0.000001)
+	assert_vector(engine_b.get_gimbal()).is_equal(Vector2(0.5, -0.3))
+
+
+func test_vessel_command_receiver_ignores_non_engine_commands() -> void:
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
+	var engine := EngineModel.new()
+	vessel.add_child(engine)
+
+	var receiver := VesselCommandReceiver.new()
+	vessel.add_child(receiver)
+
+	receiver.receive_command(EngineCommand.new(1.0, Vector3.ZERO))
+	receiver.receive_command(Command.new())
+
+	assert_float(engine.get_throttle()).is_equal_approx(1.0, 0.000001)
+
+
+func test_vessel_command_receiver_respects_active_engine_subset() -> void:
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
+	var engine_a := EngineModel.new()
+	var engine_b := EngineModel.new()
+	vessel.add_child(engine_a)
+	vessel.add_child(engine_b)
+
+	var receiver := VesselCommandReceiver.new()
+	vessel.add_child(receiver)
+
+	var subset: Array[EngineModel] = [engine_b]
+	receiver.set_active_engines(subset)
+	receiver.receive_command(EngineCommand.new(0.6, Vector3(1.0, 0.0, 0.0)))
+
+	assert_float(engine_a.get_throttle()).is_zero()
+	assert_float(engine_b.get_throttle()).is_equal_approx(0.6, 0.000001)
+
+
+func test_lamae_scene_has_vessel_level_selectable_and_command_receiver() -> void:
+	var scene := load("res://scene/engine/lamae.tscn") as PackedScene
+	var vessel = auto_free(scene.instantiate())
+	add_child(vessel)
+
+	var selectable := vessel.get_node("Selectable3D") as Selectable3D
+	var receiver := vessel.get_node("VesselCommandReceiver") as VesselCommandReceiver
+	var info := vessel.get_node("Info") as Selectable3DInfo
+
+	assert_object(selectable).is_not_null()
+	assert_object(receiver).is_not_null()
+	assert_object(info).is_not_null()
+	assert_object(selectable.get_command_receiver()).is_same(receiver)
+	assert_object(selectable.get_info()).is_same(info)
+	assert_int(receiver.get_active_engines().size()).is_equal(1)
+	assert_object(receiver.get_active_engines()[0]).is_same(vessel.get_node("LemaeEngine"))
 
 
 func test_lamae_scene_uses_one_rigid_body_and_component_masses() -> void:
