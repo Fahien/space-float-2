@@ -10,7 +10,7 @@
 ## scene tree and unregisters when it leaves. During physics integration it asks
 ## the system to apply the full gravitational acceleration from every registered
 ## `CelestialBody3D`. At the same time, the system records the strongest
-## current source in `current_primary`, giving UI, camera, atmosphere, and later
+## current source in `current_primary`, giving UI, camera, atmosphere, and vessel
 ## drag code a stable answer to the local-environment question.
 ##
 ## This base class deliberately stops at shared environment plumbing. It does

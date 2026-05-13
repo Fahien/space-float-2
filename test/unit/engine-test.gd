@@ -9,8 +9,9 @@
 ## The suite is intentionally close to the public script API. A future refactor
 ## may change visuals or scene nesting, but it should preserve the same outcomes:
 ## component dry mass stays separate from tank mass, propellant burn updates the
-## vessel mass ledger, and no joint is required for the engine and tank to fly as
-## one craft.
+## vessel mass ledger, engine thrust resolves through the vessel mount frame,
+## throttle wakes a sleeping parent body, and no joint is required for the engine
+## and tank to fly as one craft.
 extends GdUnitTestSuite
 
 
@@ -151,6 +152,67 @@ func test_engine_model_component_mass_excludes_propellant_tank() -> void:
 
 	assert_float(engine_model.get_total_mass()).is_equal_approx(125.0, 0.000001)
 	assert_float(propellant_model.get_total_mass()).is_equal_approx(100.0, 0.000001)
+
+
+func test_engine_model_resolves_vessel_force_and_offset_from_mount_frame() -> void:
+	var propellant_model := auto_free(PropellantModel.new()) as PropellantModel
+	propellant_model.propellant_mass = 10.0
+
+	var propulsion_model := PropulsionModel.new()
+	propulsion_model.max_thrust_newtons = 100.0
+	propulsion_model.max_propellant_flow_kg_per_s = 1.0
+
+	var engine_model := auto_free(EngineModel.new()) as EngineModel
+	engine_model.propellant_model = propellant_model
+	engine_model.propulsion_model = propulsion_model
+	engine_model.transform = Transform3D(
+		Basis(Vector3.FORWARD, PI * 0.5),
+		Vector3(1.0, 2.0, 3.0)
+	)
+	engine_model.thrust_origin_local = Vector3(0.0, -0.5, 0.25)
+	engine_model.set_throttle(1.0)
+	var body_transform := Transform3D(
+		Basis(Vector3.RIGHT, PI * 0.5),
+		Vector3(10.0, 20.0, 30.0)
+	)
+
+	var force := engine_model.resolve_vessel_force(0.25, body_transform)
+	var expected_direction := (
+		body_transform.basis
+		* engine_model.transform.basis
+		* Vector3.UP
+	).normalized()
+	var expected_offset := (
+		body_transform.basis
+		* (
+			engine_model.transform.origin
+			+ engine_model.transform.basis * engine_model.thrust_origin_local
+		)
+	)
+
+	assert_vector(force).is_equal_approx(
+		expected_direction * 100.0,
+		Vector3(0.000001, 0.000001, 0.000001)
+	)
+	assert_vector(engine_model.get_vessel_force_offset(body_transform)).is_equal_approx(
+		expected_offset,
+		Vector3(0.000001, 0.000001, 0.000001)
+	)
+
+
+func test_engine_model_wakes_parent_vessel_when_throttle_opens() -> void:
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
+	var engine_model := EngineModel.new()
+	vessel.add_child(engine_model)
+	vessel.sleeping = true
+
+	engine_model.set_throttle(0.0)
+
+	assert_bool(vessel.sleeping).is_true()
+
+	engine_model.set_throttle(1.0)
+
+	assert_bool(vessel.sleeping).is_false()
 
 
 func test_lamae_scene_uses_one_rigid_body_and_component_masses() -> void:

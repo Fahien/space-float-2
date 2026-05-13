@@ -8,16 +8,16 @@
 ##
 ## The system has two ledgers. `CelestialBody3D` nodes enter the source
 ## ledger and provide radial acceleration fields. `GravityRigidBody3D` nodes
-## enter the body ledger so the environment path can later grow from gravity
-## into atmosphere, drag, wind, and frame-context updates. The immediate
-## integration step still keeps Newtonian superposition: every valid source
-## contributes to the acceleration vector applied to a body.
+## enter the body ledger so the environment path can connect gravity to
+## atmosphere, drag, wind, and frame-context updates. The immediate integration
+## step still keeps Newtonian superposition: every valid source contributes to
+## the acceleration vector applied to a body.
 ##
 ## A second question travels beside the force calculation. For local UI and
 ## environmental work, the simulation needs to know which registered body is
 ## strongest at a point. The answer is not used to discard the other gravity
 ## sources; it becomes a practical primary-body cache for local down, celestial
-## body readouts, and later planet-owned atmosphere queries.
+## body readouts, and planet-owned atmosphere queries.
 extends Node
 
 var _sources: Array[CelestialBody3D] = []

@@ -1,15 +1,16 @@
-## Chapter: Small Atmosphere and Drag Laws
+## Chapter: Small Atmosphere and Drag Resources
 ##
 ## The simulation helpers in this file are deliberately modest. `AtmosphereModel`
-## supplies a first Earth-style vertical column through instance methods, while
-## `AerodynamicsModel` owns only the quadratic drag equation. The tests keep
-## those responsibilities separate so planet-owned atmosphere data can grow
-## without turning drag into an Earth-only helper.
+## supplies a first Earth-style vertical column through instance methods.
+## `AerodynamicsModel` supplies the vessel-side drag resource: enable state,
+## coefficient, reference area, and the quadratic force law. The tests keep those
+## responsibilities separate so planet-owned atmosphere data can grow without
+## turning drag into an Earth-only helper.
 ##
 ## The assertions use fixed boundary altitudes and simple velocity vectors. They
-## serve as reference points for later vessel work: density comes from the local
-## environment, but drag direction and magnitude remain caller-provided physics
-## inputs.
+## serve as reference points for active vessel work: density comes from the local
+## environment, while the vessel resource determines whether drag exists and how
+## strongly it reacts to relative airflow.
 extends GdUnitTestSuite
 
 
@@ -38,13 +39,33 @@ func test_atmosphere_temperature_pressure_and_density() -> void:
 
 
 func test_aerodynamic_drag_is_zero_without_relative_air_speed() -> void:
+	var aerodynamics := AerodynamicsModel.new()
+
 	assert_vector(
-		AerodynamicsModel.get_drag_force(Vector3.ZERO, 1.2, 0.5, 2.0)
+		aerodynamics.get_drag_force(Vector3.ZERO, 1.2)
+	).is_equal(Vector3.ZERO)
+
+
+func test_aerodynamic_drag_is_zero_when_disabled_or_without_air() -> void:
+	var aerodynamics := AerodynamicsModel.new()
+
+	aerodynamics.enabled = false
+	assert_vector(
+		aerodynamics.get_drag_force(Vector3(10.0, 0.0, 0.0), 1.2)
+	).is_equal(Vector3.ZERO)
+
+	aerodynamics.enabled = true
+	assert_vector(
+		aerodynamics.get_drag_force(Vector3(10.0, 0.0, 0.0), 0.0)
 	).is_equal(Vector3.ZERO)
 
 
 func test_aerodynamic_drag_points_opposite_velocity_with_expected_magnitude() -> void:
-	var drag := AerodynamicsModel.get_drag_force(Vector3(3.0, 4.0, 0.0), 1.0, 2.0, 0.5)
+	var aerodynamics := AerodynamicsModel.new()
+	aerodynamics.drag_coefficient = 2.0
+	aerodynamics.reference_area = 0.5
+
+	var drag := aerodynamics.get_drag_force(Vector3(3.0, 4.0, 0.0), 1.0)
 
 	assert_vector(drag).is_equal_approx(Vector3(-7.5, -10.0, 0.0), Vector3(0.000001, 0.000001, 0.000001))
 	assert_float(drag.length()).is_equal_approx(12.5, 0.000001)

@@ -16,7 +16,7 @@
 ## This split is the migration line between the early multi-rigid-body assembly
 ## and the current compound body. Engine scenes keep the visible machinery and
 ## propulsion rules, while the vessel root keeps the single Jolt body that
-## collisions, gravity, mass, and future atmosphere forces will act on.
+## collisions, gravity, mass, and vessel-level atmosphere forces act on.
 class_name EngineModel
 
 extends CollisionShape3D

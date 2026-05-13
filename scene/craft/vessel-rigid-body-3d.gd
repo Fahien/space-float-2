@@ -1,4 +1,4 @@
-## Chapter: The Vessel as One Body
+## Chapter: The Vessel as One Body in Air and Gravity
 ##
 ## The LAMAE assembly once described a small spacecraft as a collection of
 ## dynamic parts joined together. That was useful for proving the pieces, but a
@@ -10,14 +10,16 @@
 ## `CollisionShape3D` shapes to the compound body and expose small contracts such
 ## as `get_total_mass()`, `resolve_vessel_force(...)`, and
 ## `get_vessel_force_offset(...)`. The vessel root owns integration, applies
-## celestial gravity once, gathers engine forces, and sends those forces into the
-## same Jolt body that handles contacts and impulses.
+## celestial gravity once, samples the current primary body's atmosphere, gathers
+## engine forces, and sends those forces into the same Jolt body that handles
+## contacts and impulses.
 ##
 ## The design keeps authored scenes readable. Engine and tank scenes still carry
 ## their visuals, collision shapes, and resource tuning, but they no longer form
-## independent rigid bodies. Future atmosphere, drag, staging, and payload logic
-## should extend this root-and-component contract instead of reintroducing joints
-## for ordinary vessel structure.
+## independent rigid bodies. Drag now enters as an optional vessel resource that
+## uses planet-owned air density; staging and payload logic should follow the
+## same root-and-component contract instead of reintroducing joints for ordinary
+## vessel structure.
 class_name VesselRigidBody3D
 
 extends GravityRigidBody3D
@@ -29,16 +31,25 @@ signal mass_properties_changed
 ## Lower bound that keeps the physics body valid if components report zero mass.
 var minimum_mass: float = 0.000001
 
+@export
+## Optional aerodynamic tuning for this vessel.
+##
+## A null resource means the vessel flies without drag. When present and enabled,
+## the vessel asks its current primary celestial body for air density and applies
+## the resulting drag as a central force.
+var aerodynamics_model: AerodynamicsModel = null
+
 
 func _ready() -> void:
 	_connect_component_signals()
 	sync_mass_properties()
 
 
-func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+func _integrate_forces(p_state: PhysicsDirectBodyState3D) -> void:
 	sync_mass_properties()
-	CelestialBodySystem.apply_gravity(self , state)
-	_apply_component_forces(state)
+	CelestialBodySystem.apply_gravity(self, p_state)
+	_apply_component_forces(p_state)
+	_apply_aerodynamics_forces(p_state)
 	sync_mass_properties()
 
 
@@ -116,6 +127,28 @@ func _apply_component_forces(state: PhysicsDirectBodyState3D) -> void:
 			offset = component.get_vessel_force_offset(state.transform)
 
 		state.apply_force(force, offset)
+
+
+func _apply_aerodynamics_forces(p_state: PhysicsDirectBodyState3D) -> void:
+	if (
+		aerodynamics_model == null
+		or not aerodynamics_model.enabled
+		or current_primary == null
+		or not is_instance_valid(current_primary)
+	):
+		return
+
+	var air_density := current_primary.get_air_density_at(p_state.transform.origin)
+	if air_density <= 0.0:
+		return
+
+	var wind_velocity := Vector3.ZERO
+	var relative_air_velocity := p_state.linear_velocity - wind_velocity
+	var drag: Vector3 = aerodynamics_model.get_drag_force(relative_air_velocity, air_density)
+	if drag.length_squared() <= 0.0:
+		return
+
+	p_state.apply_central_force(drag)
 
 
 func _get_component_mass(component: Node3D) -> float:

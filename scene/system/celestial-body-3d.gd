@@ -2,9 +2,9 @@
 ##
 ## A visible planet is only one part of the simulation contract. The active
 ## solar-system scene also needs a body that can register gravity, define a mean
-## surface, answer "up" and altitude, and eventually supply the local air that
-## drag and flight instruments should use. `CelestialBody3D` is that authored
-## boundary between scene composition and physics queries.
+## surface, answer "up" and altitude, and supply the local air density that drag
+## and flight instruments should use. `CelestialBody3D` is that authored boundary
+## between scene composition and physics queries.
 ##
 ## When the node enters the tree, it registers with `CelestialBodySystem`.
 ## Rigid bodies then receive gravity from the system's full source

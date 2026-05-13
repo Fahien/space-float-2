@@ -62,8 +62,10 @@ var _thruster_mount_local_basis: Basis = Basis.IDENTITY
 ## the authored vessel body can carry its own aerodynamic placeholder values.
 @export var drag_coefficient: float = 0.47
 
-## Atmosphere is static for now. Keeping wind explicit preserves the API for
-## future extensions without changing the drag call contract again.
+## The retiring launch harness keeps wind explicit even though the active
+## `VesselRigidBody3D` path currently assumes still air. This preserves the old
+## harness contract while atmosphere velocity moves toward the celestial-body
+## environment path.
 ##
 ## Frame:
 ## - scene-space meters per second in the current harness

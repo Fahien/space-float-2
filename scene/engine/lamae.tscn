@@ -1,13 +1,19 @@
 [gd_scene format=3 uid="uid://c3x4fdu3o1dpa"]
 
-[ext_resource type="Script" path="res://scene/craft/vessel-rigid-body-3d.gd" id="1_mcb5o"]
+[ext_resource type="Script" uid="uid://d35uwwg3mcb5o" path="res://scene/craft/vessel-rigid-body-3d.gd" id="1_mcb5o"]
 [ext_resource type="PackedScene" uid="uid://d3uw88kymxrky" path="res://scene/engine/lemae-engine.tscn" id="1_rkxnl"]
+[ext_resource type="Script" uid="uid://debbbv5vsy3y5" path="res://scene/sim/aerodynamics-model.gd" id="2_tnt4q"]
 [ext_resource type="PackedScene" uid="uid://bp368ab2thy5" path="res://scene/engine/propellant-tank.tscn" id="2_vrnsk"]
+
+[sub_resource type="Resource" id="Resource_tnt4q"]
+script = ExtResource("2_tnt4q")
+metadata/_custom_type_script = "uid://debbbv5vsy3y5"
 
 [node name="Lamae" type="RigidBody3D" unique_id=2118705930]
 mass = 200.0
 can_sleep = false
 script = ExtResource("1_mcb5o")
+aerodynamics_model = SubResource("Resource_tnt4q")
 
 [node name="LemaeEngine" parent="." unique_id=464772022 node_paths=PackedStringArray("propellant_model") instance=ExtResource("1_rkxnl")]
 propellant_model = NodePath("../PropellantTank")
