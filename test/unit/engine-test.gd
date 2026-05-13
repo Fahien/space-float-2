@@ -15,6 +15,69 @@
 extends GdUnitTestSuite
 
 
+class FixedMassModel:
+	extends MassModel
+
+	var reported_mass := 0.0
+
+	func get_total_mass() -> float:
+		return reported_mass
+
+
+class LooseMassNode:
+	extends Node3D
+
+	func get_total_mass() -> float:
+		return 999.0
+
+
+func test_mass_model_notifies_immediate_parent_vessel() -> void:
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
+	var component := FixedMassModel.new()
+	component.reported_mass = 12.5
+	vessel.add_child(component)
+
+	assert_object(component.get_vessel_body()).is_same(vessel)
+
+	component.notify_mass_changed()
+
+	assert_float(vessel.mass).is_equal_approx(12.5, 0.000001)
+	assert_vector(vessel.center_of_mass).is_equal(Vector3.ZERO)
+
+
+func test_vessel_mass_ledger_uses_direct_mass_models_only() -> void:
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
+
+	var light_component := FixedMassModel.new()
+	light_component.reported_mass = 10.0
+	light_component.position = Vector3(-1.0, 0.0, 0.0)
+	vessel.add_child(light_component)
+
+	var heavy_component := FixedMassModel.new()
+	heavy_component.reported_mass = 30.0
+	heavy_component.position = Vector3(1.0, 0.0, 0.0)
+	vessel.add_child(heavy_component)
+
+	var negative_component := FixedMassModel.new()
+	negative_component.reported_mass = -20.0
+	negative_component.position = Vector3(0.0, 10.0, 0.0)
+	vessel.add_child(negative_component)
+
+	var loose_node := LooseMassNode.new()
+	vessel.add_child(loose_node)
+
+	var nested_component := FixedMassModel.new()
+	nested_component.reported_mass = 500.0
+	loose_node.add_child(nested_component)
+
+	assert_int(vessel.get_mass_components().size()).is_equal(3)
+	assert_float(vessel.get_total_mass()).is_equal_approx(40.0, 0.000001)
+	assert_vector(vessel.get_center_of_mass_from_components()).is_equal_approx(
+		Vector3(0.5, 0.0, 0.0),
+		Vector3(0.000001, 0.000001, 0.000001)
+	)
+
+
 func test_propellant_model_clamps_mass_and_consumes_propellant() -> void:
 	var propellant_model := auto_free(PropellantModel.new()) as PropellantModel
 	propellant_model.dry_mass = -5.0
@@ -152,6 +215,22 @@ func test_engine_model_component_mass_excludes_propellant_tank() -> void:
 
 	assert_float(engine_model.get_total_mass()).is_equal_approx(125.0, 0.000001)
 	assert_float(propellant_model.get_total_mass()).is_equal_approx(100.0, 0.000001)
+
+
+func test_engine_model_mass_clamps_and_notifies_parent_vessel() -> void:
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
+	var engine_model := EngineModel.new()
+	vessel.add_child(engine_model)
+
+	engine_model.engine_mass = 42.0
+
+	assert_object(engine_model).is_instanceof(MassModel)
+	assert_float(vessel.mass).is_equal_approx(42.0, 0.000001)
+
+	engine_model.engine_mass = -3.0
+
+	assert_float(engine_model.get_total_mass()).is_zero()
+	assert_float(vessel.mass).is_equal_approx(vessel.minimum_mass, 0.000001)
 
 
 func test_engine_model_resolves_vessel_force_and_offset_from_mount_frame() -> void:

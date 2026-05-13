@@ -84,6 +84,7 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	_register_as_floating_origin()
 	_ensure_explicit_spring_arm_shape()
 	target_yaw = yaw_pivot.rotation.y
 	target_pitch = pitch_pivot.rotation.x
@@ -92,6 +93,16 @@ func _ready() -> void:
 	_refresh_spring_arm_exclusions()
 
 	SelectionSystem.selection_changed.connect(_on_selection_changed)
+
+
+func _register_as_floating_origin() -> void:
+	var node = self
+	var parent = node.get_parent()
+	while parent != null and not parent is BigSpaceRoot3D:
+		node = parent
+		parent = node.get_parent()
+	if parent is BigSpaceRoot3D:
+		parent.floating_origin_path = parent.get_path_to(self)
 
 
 func _ensure_explicit_spring_arm_shape() -> void:

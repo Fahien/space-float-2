@@ -2,9 +2,11 @@
 ##
 ## The active propulsion path now lives inside a single parent vessel body.
 ## `EngineModel` is no longer the craft that falls through the solar system; it
-## is the authored engine component bolted into that craft. The node contributes
-## one collision shape, one dry hardware mass, one configurable thrust contract,
-## and the local mount frame from which a burn should push.
+## is the authored engine component bolted into that craft. As a `MassModel`, it
+## contributes dry hardware mass to the vessel ledger. In the LAMAE scene, the
+## script is attached to a `CollisionShape3D` root, so the same authored
+## component can also supply shape data to the compound rigid body without
+## becoming a second rigid body.
 ##
 ## The flight sequence belongs to `VesselRigidBody3D`. Each physics step, the
 ## vessel applies celestial gravity once, asks child engines to resolve gimbal
@@ -14,12 +16,13 @@
 ## plume deflection, and selection-panel reporting.
 ##
 ## This split is the migration line between the early multi-rigid-body assembly
-## and the current compound body. Engine scenes keep the visible machinery and
-## propulsion rules, while the vessel root keeps the single Jolt body that
-## collisions, gravity, mass, and vessel-level atmosphere forces act on.
+## and the current compound body. Engine scenes keep the visible machinery,
+## selection data, propellant link, and propulsion rules, while the vessel root
+## keeps the single Jolt body that collisions, gravity, mass, and vessel-level
+## atmosphere forces act on.
 class_name EngineModel
 
-extends CollisionShape3D
+extends MassModel
 
 @export
 ## Mutable propellant source consumed by this engine instance.
@@ -64,6 +67,7 @@ var thrust_origin_local: Vector3 = Vector3.ZERO
 var engine_mass: float = 100.0:
 	set(p_value):
 		engine_mass = maxf(p_value, 0.0)
+		notify_mass_changed()
 
 ## Current throttle setting, 0.0 (off) to 1.0 (full).
 var _throttle: float = 0.0
@@ -142,13 +146,11 @@ func _update_info() -> void:
 	info.info["gimbal_angles"] = _gimbal_angles
 	info.info["celestial_body"] = "None"
 
-	var vessel = _get_vessel_body()
+	var vessel := get_vessel_body()
 	if vessel != null:
-		if vessel.has_method("get_total_mass"):
-			info.info["total_mass"] = vessel.get_total_mass()
-		if vessel is RigidBody3D:
-			info.info["speed"] = vessel.linear_velocity.length()
-		if vessel is GravityRigidBody3D and vessel.current_primary != null:
+		info.info["total_mass"] = vessel.get_total_mass()
+		info.info["speed"] = vessel.linear_velocity.length()
+		if vessel.current_primary != null:
 			info.info["celestial_body"] = vessel.current_primary.name
 
 
@@ -164,9 +166,9 @@ func get_propellant_mass() -> float:
 
 func set_throttle(p_throttle: float) -> void:
 	_throttle = clampf(p_throttle, 0.0, 1.0)
-	if get_throttle() > 0.0:
-		var vessel = _get_vessel_body()
-		if vessel is RigidBody3D:
+	if _throttle > 0.0:
+		var vessel := get_vessel_body()
+		if vessel != null:
 			vessel.sleeping = false
 
 
@@ -298,11 +300,3 @@ func resolve_propulsion_step(delta: float) -> float:
 
 	var burn_fraction := actual_burn / requested_burn
 	return propulsion_model.get_thrust_magnitude(_throttle) * burn_fraction
-
-
-## Returns the parent vessel when this engine is installed under a mass owner.
-func _get_vessel_body():
-	var parent := get_parent()
-	if parent != null and parent.has_method("get_total_mass"):
-		return parent
-	return null

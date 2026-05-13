@@ -17,6 +17,7 @@ aerodynamics_model = SubResource("Resource_tnt4q")
 
 [node name="LemaeEngine" parent="." unique_id=464772022 node_paths=PackedStringArray("propellant_model") instance=ExtResource("1_rkxnl")]
 propellant_model = NodePath("../PropellantTank")
+engine_mass = null
 
 [node name="PropellantTank" parent="." unique_id=1836508573 instance=ExtResource("2_vrnsk")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)

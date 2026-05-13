@@ -19,7 +19,6 @@ tonemap_mode = 2
 glow_enabled = true
 
 [node name="Solar" type="BigSpaceRoot3D" unique_id=983839105]
-floating_origin_path = NodePath("BigGrid3D/Earth/NorthPole/CameraOrbitRoot")
 
 [node name="BigNode3D" type="BigGrid3D" parent="." unique_id=2140746374]
 
@@ -32,11 +31,7 @@ environment = SubResource("Environment_wd4f6")
 
 [node name="Sun" parent="BigNode3D" unique_id=1634657910 instance=ExtResource("2_f3e57")]
 
-[node name="BigGrid3D" type="BigGrid3D" parent="." unique_id=1796559471]
-
-[node name="Earth" parent="BigGrid3D" unique_id=701989974 instance=ExtResource("2_505xy")]
+[node name="Earth" parent="." unique_id=1098988874 instance=ExtResource("2_505xy")]
 cell_x = 150000000
 
 [node name="Ui" parent="." unique_id=825281140 instance=ExtResource("4_f3e57")]
-
-[editable path="BigGrid3D/Earth"]
