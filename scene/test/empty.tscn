@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://c11pdoeo7i4fy" path="res://texture/milky-way.jpg" id="1_rqrpt"]
 [ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="2_kgaxx"]
-[ext_resource type="PackedScene" uid="uid://c3x4fdu3o1dpa" path="res://scene/engine/lamae.tscn" id="3_kgaxx"]
+[ext_resource type="PackedScene" uid="uid://c3x4fdu3o1dpa" path="res://scene/craft/lamae.tscn" id="3_kgaxx"]
 [ext_resource type="PackedScene" uid="uid://bra13jchy028" path="res://scene/ui/ui.tscn" id="6_vsoa4"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_t0yu5"]

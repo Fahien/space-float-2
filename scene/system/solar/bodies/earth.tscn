@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="1_hw4fg"]
 [ext_resource type="Script" uid="uid://tvmhliwnds1l" path="res://scene/system/celestial-body-3d.gd" id="1_uho2q"]
 [ext_resource type="Script" uid="uid://b8aftbf2tcsuo" path="res://scene/sim/atmosphere-model.gd" id="2_ctbkc"]
-[ext_resource type="PackedScene" uid="uid://c3x4fdu3o1dpa" path="res://scene/engine/lamae.tscn" id="3_o23ev"]
+[ext_resource type="PackedScene" uid="uid://c3x4fdu3o1dpa" path="res://scene/craft/lamae.tscn" id="3_o23ev"]
 [ext_resource type="PackedScene" uid="uid://ebcwe2nqwieb" path="res://model/flag-red.glb" id="3_q8l8h"]
 [ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="5_6egep"]
 [ext_resource type="PackedScene" uid="uid://bjtp1iqip2ey6" path="res://scene/system/solar/bodies/moon.tscn" id="6_7uqqb"]
@@ -38,16 +38,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.267999999996391, 2, 0)
 
 [node name="CameraOrbitRoot" parent="NorthPole" unique_id=188560390 node_paths=PackedStringArray("target") instance=ExtResource("5_6egep")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
-mouse_sensitivity = null
-rotation_responsiveness = null
-zoom_step = null
-zoom_responsiveness = null
-min_zoom = null
-max_zoom = null
-min_pitch_deg = null
-max_pitch_deg = null
-collision_probe_radius = null
-drag_start_threshold = null
 target = NodePath("../Lamae")
 
 [node name="Moon" parent="." unique_id=1357675097 instance=ExtResource("6_7uqqb")]
