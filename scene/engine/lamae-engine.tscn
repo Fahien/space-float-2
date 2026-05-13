@@ -58,7 +58,7 @@ rings = 0
 cap_top = false
 cap_bottom = false
 
-[node name="LemaeEngine" type="CollisionShape3D" unique_id=464772022 node_paths=PackedStringArray("plume")]
+[node name="LamaeEngine" type="CollisionShape3D" unique_id=464772022 node_paths=PackedStringArray("plume")]
 shape = SubResource("CylinderShape3D_b5lh5")
 script = ExtResource("1_kowjs")
 propulsion_model = SubResource("Resource_xp77y")

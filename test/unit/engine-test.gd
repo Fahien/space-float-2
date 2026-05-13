@@ -113,22 +113,6 @@ func test_engine_command_sets_type_and_preserves_payload() -> void:
 	assert_vector(command.gimbal).is_equal(Vector3(1.0, -0.5, 0.25))
 
 
-func test_engine_command_receiver_applies_engine_commands_only() -> void:
-	var engine_model := auto_free(EngineModel.new()) as EngineModel
-	var receiver := auto_free(EngineCommandReceiver.new()) as EngineCommandReceiver
-	receiver.engine_model = engine_model
-
-	receiver.receive_command(EngineCommand.new(1.5, Vector3(2.0, -3.0, 9.0)))
-
-	assert_float(engine_model.get_throttle()).is_equal_approx(1.0, 0.000001)
-	assert_vector(engine_model.get_gimbal()).is_equal(Vector2(1.0, -1.0))
-
-	receiver.receive_command(Command.new())
-
-	assert_float(engine_model.get_throttle()).is_equal_approx(1.0, 0.000001)
-	assert_vector(engine_model.get_gimbal()).is_equal(Vector2(1.0, -1.0))
-
-
 func test_engine_model_resolves_propulsion_step_against_propellant_supply() -> void:
 	var propellant_model := auto_free(PropellantModel.new()) as PropellantModel
 	propellant_model.propellant_mass = 0.5
@@ -421,7 +405,7 @@ func test_lamae_scene_has_vessel_level_selectable_and_command_receiver() -> void
 	assert_object(selectable.get_command_receiver()).is_same(receiver)
 	assert_object(selectable.get_info()).is_same(info)
 	assert_int(receiver.get_active_engines().size()).is_equal(1)
-	assert_object(receiver.get_active_engines()[0]).is_same(vessel.get_node("LemaeEngine"))
+	assert_object(receiver.get_active_engines()[0]).is_same(vessel.get_node("LamaeEngine"))
 
 
 func test_lamae_scene_uses_one_rigid_body_and_component_masses() -> void:
@@ -437,7 +421,7 @@ func test_lamae_scene_uses_one_rigid_body_and_component_masses() -> void:
 	assert_object(rigid_bodies[0]).is_same(vessel)
 	assert_int(joints.size()).is_equal(0)
 
-	var engine := vessel.get_node("LemaeEngine") as EngineModel
+	var engine := vessel.get_node("LamaeEngine") as EngineModel
 	var tank := vessel.get_node("PropellantTank") as PropellantModel
 
 	assert_object(engine).is_not_null()

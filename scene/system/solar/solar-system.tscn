@@ -32,6 +32,8 @@ environment = SubResource("Environment_wd4f6")
 [node name="Sun" parent="BigNode3D" unique_id=1634657910 instance=ExtResource("2_f3e57")]
 
 [node name="Earth" parent="." unique_id=1098988874 instance=ExtResource("2_505xy")]
-cell_x = 150000000
+cell_x = 149999995
+cell_z = 3
+cell_local_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -429.54443, 0, -33.82636239287376)
 
 [node name="Ui" parent="." unique_id=825281140 instance=ExtResource("4_f3e57")]
