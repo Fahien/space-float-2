@@ -109,7 +109,7 @@ func _update_info() -> void:
 
 
 func get_total_mass() -> float:
-	return mass + get_propellant_mass()
+	return mass + propellant_model.get_total_mass()
 
 
 func get_propellant_mass() -> float:
