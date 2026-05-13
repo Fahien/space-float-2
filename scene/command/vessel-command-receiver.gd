@@ -101,6 +101,9 @@ func _update_info() -> void:
 	info.info["celestial_body"] = "None"
 	if vessel.current_primary != null:
 		info.info["celestial_body"] = vessel.current_primary.name
+		info.info["altitude"] = vessel.current_primary.get_altitude_at(vessel.global_position)
+		var up := vessel.current_primary.get_up_at(vessel.global_position)
+		info.info["vertical_speed"] = vessel.linear_velocity.dot(up)
 
 	var propellant_mass := 0.0
 	for engine in _active_engines:

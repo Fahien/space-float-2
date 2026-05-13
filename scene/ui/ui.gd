@@ -71,8 +71,10 @@ func _format_value(key: String, value: Variant) -> String:
 	match key:
 		"total_mass", "propellant_mass":
 			return "%.1f kg" % value
-		"speed":
+		"speed", "vertical_speed":
 			return "%.1f m/s" % value
+		"altitude":
+			return "%.1f m" % value
 		"throttle":
 			return "%.0f%%" % (value * 100.0)
 		"gimbal":
