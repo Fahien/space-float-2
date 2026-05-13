@@ -1,17 +1,16 @@
 [gd_scene format=3 uid="uid://c3x4fdu3o1dpa"]
 
+[ext_resource type="Script" path="res://scene/craft/vessel-rigid-body-3d.gd" id="1_mcb5o"]
 [ext_resource type="PackedScene" uid="uid://d3uw88kymxrky" path="res://scene/engine/lemae-engine.tscn" id="1_rkxnl"]
 [ext_resource type="PackedScene" uid="uid://bp368ab2thy5" path="res://scene/engine/propellant-tank.tscn" id="2_vrnsk"]
 
-[node name="Lamae" type="Node3D" unique_id=2118705930]
+[node name="Lamae" type="RigidBody3D" unique_id=2118705930]
+mass = 200.0
+can_sleep = false
+script = ExtResource("1_mcb5o")
 
 [node name="LemaeEngine" parent="." unique_id=464772022 node_paths=PackedStringArray("propellant_model") instance=ExtResource("1_rkxnl")]
 propellant_model = NodePath("../PropellantTank")
 
 [node name="PropellantTank" parent="." unique_id=1836508573 instance=ExtResource("2_vrnsk")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-
-[node name="Generic6DOFJoint3D" type="Generic6DOFJoint3D" parent="." unique_id=2082405516]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
-node_a = NodePath("../LemaeEngine")
-node_b = NodePath("../PropellantTank")

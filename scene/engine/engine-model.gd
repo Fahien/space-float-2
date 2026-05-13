@@ -1,26 +1,25 @@
 ## Chapter: The Engine as a Flying Instrument
 ##
-## The active propulsion path begins with an ordinary scene object: a
-## `RigidBody3D` that can fall through the solar system, carry a tank, turn its
-## thrust vector, and report what is happening to the selection UI. `EngineModel`
-## is that adapter. It binds the abstract contract in `PropulsionModel` to a
-## specific engine scene and lets `PropellantModel` account for the fuel that
-## makes each commanded burn possible.
+## The active propulsion path now lives inside a single parent vessel body.
+## `EngineModel` is no longer the craft that falls through the solar system; it
+## is the authored engine component bolted into that craft. The node contributes
+## one collision shape, one dry hardware mass, one configurable thrust contract,
+## and the local mount frame from which a burn should push.
 ##
-## Gravity arrives first. Each physics step asks `CelestialBodySystem` to apply
-## the summed pull of every registered `CelestialBody3D`, then caches the
-## strongest source through `current_primary`. That cache does not decide the
-## force law; it gives pilots, debug panels, cameras, and future atmosphere code
-## the name of the body whose local environment matters most.
+## The flight sequence belongs to `VesselRigidBody3D`. Each physics step, the
+## vessel applies celestial gravity once, asks child engines to resolve gimbal
+## motion and propellant-limited thrust, then applies the returned force at the
+## component's offset from the vessel center. The engine still owns the details
+## that make a command physical: throttle clamping, tank drawdown, actuator slew,
+## plume deflection, and selection-panel reporting.
 ##
-## Propulsion follows the environment step. Throttle becomes requested thrust,
-## tank state limits the burn, gimbal commands slew toward physical pitch and
-## yaw angles, and the plume mirrors the resolved actuator basis. The older
-## `scene/vessel` path may still preserve useful ideas, but this file is the
-## working chapter of the standalone engine assembly.
+## This split is the migration line between the early multi-rigid-body assembly
+## and the current compound body. Engine scenes keep the visible machinery and
+## propulsion rules, while the vessel root keeps the single Jolt body that
+## collisions, gravity, mass, and future atmosphere forces will act on.
 class_name EngineModel
 
-extends GravityRigidBody3D
+extends CollisionShape3D
 
 @export
 ## Mutable propellant source consumed by this engine instance.
@@ -54,6 +53,18 @@ var info: Selectable3DInfo = null:
 		info = p_info
 		update_configuration_warnings()
 
+@export
+## Local point where thrust should be applied relative to this component. This
+## lets the collision shape be centered independently from the nozzle/mount
+## pivot used by thrust and plume gimbal visuals.
+var thrust_origin_local: Vector3 = Vector3.ZERO
+
+@export_custom(PROPERTY_HINT_NONE, "suffix: kg")
+## Dry hardware mass contributed by this engine component, in kilograms.
+var engine_mass: float = 100.0:
+	set(p_value):
+		engine_mass = maxf(p_value, 0.0)
+
 ## Current throttle setting, 0.0 (off) to 1.0 (full).
 var _throttle: float = 0.0
 
@@ -68,11 +79,8 @@ var _gimbal_angles: Vector2 = Vector2.ZERO
 ## Authored local plume transform before runtime gimbal deflection is applied.
 var _plume_neutral_transform: Transform3D = Transform3D.IDENTITY
 
-## Cached thrust force.
+## Cached scene-space thrust force from the last resolved vessel-force step.
 var _thrust_force: Vector3 = Vector3.ZERO
-
-@export
-var engine_mass: float = 100.0
 
 func _ready() -> void:
 	if plume != null:
@@ -100,14 +108,24 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return warnings
 
 
-func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
-	CelestialBodySystem.apply_gravity(self, state)
-	resolve_gimbal_step(state.step)
-	var thrust_magnitude := resolve_propulsion_step(state.step)
+## Resolves this engine's contribution to the parent vessel for one physics step.
+##
+## The parent supplies its current transform so the component can convert its
+## authored mount frame into scene-space force without becoming a rigid body.
+func resolve_vessel_force(delta: float, body_transform: Transform3D) -> Vector3:
+	resolve_gimbal_step(delta)
+	var thrust_magnitude := resolve_propulsion_step(delta)
 	_sync_plume_visual(thrust_magnitude > 0.0)
-	_cache_thrust_force(thrust_magnitude, state.transform.basis)
-	if _thrust_force.length_squared() > 0.0:
-		state.apply_force(_thrust_force)
+
+	var component_basis := (body_transform.basis * transform.basis).orthonormalized()
+	_cache_thrust_force(thrust_magnitude, component_basis)
+	return _thrust_force
+
+
+## Returns the scene-space offset where the parent vessel should apply thrust.
+func get_vessel_force_offset(body_transform: Transform3D) -> Vector3:
+	var local_offset := transform.origin + transform.basis * thrust_origin_local
+	return body_transform.basis * local_offset
 
 
 func _update_info() -> void:
@@ -117,18 +135,25 @@ func _update_info() -> void:
 	info.info["name"] = name
 	info.info["total_mass"] = get_total_mass()
 	info.info["propellant_mass"] = get_propellant_mass()
-	info.info["speed"] = linear_velocity.length()
+	info.info["speed"] = 0.0
 	info.info["throttle"] = _throttle
 	info.info["thrust"] = _thrust_force
 	info.info["gimbal"] = _gimbal
 	info.info["gimbal_angles"] = _gimbal_angles
 	info.info["celestial_body"] = "None"
-	if current_primary != null:
-		info.info["celestial_body"] = current_primary.name
+
+	var vessel = _get_vessel_body()
+	if vessel != null:
+		if vessel.has_method("get_total_mass"):
+			info.info["total_mass"] = vessel.get_total_mass()
+		if vessel is RigidBody3D:
+			info.info["speed"] = vessel.linear_velocity.length()
+		if vessel is GravityRigidBody3D and vessel.current_primary != null:
+			info.info["celestial_body"] = vessel.current_primary.name
 
 
 func get_total_mass() -> float:
-	return mass + propellant_model.get_total_mass()
+	return engine_mass
 
 
 func get_propellant_mass() -> float:
@@ -140,7 +165,9 @@ func get_propellant_mass() -> float:
 func set_throttle(p_throttle: float) -> void:
 	_throttle = clampf(p_throttle, 0.0, 1.0)
 	if get_throttle() > 0.0:
-		sleeping = false
+		var vessel = _get_vessel_body()
+		if vessel is RigidBody3D:
+			vessel.sleeping = false
 
 
 func get_throttle() -> float:
@@ -223,9 +250,13 @@ func _sync_plume_visual(is_burning: bool) -> void:
 		return
 
 	var gimbal_basis := get_actual_gimbal_basis_local()
+	var plume_origin := (
+		thrust_origin_local
+		+ gimbal_basis * (_plume_neutral_transform.origin - thrust_origin_local)
+	)
 	plume.transform = Transform3D(
 		gimbal_basis * _plume_neutral_transform.basis,
-		gimbal_basis * _plume_neutral_transform.origin
+		plume_origin
 	)
 	plume.visible = is_burning
 
@@ -267,3 +298,11 @@ func resolve_propulsion_step(delta: float) -> float:
 
 	var burn_fraction := actual_burn / requested_burn
 	return propulsion_model.get_thrust_magnitude(_throttle) * burn_fraction
+
+
+## Returns the parent vessel when this engine is installed under a mass owner.
+func _get_vessel_body():
+	var parent := get_parent()
+	if parent != null and parent.has_method("get_total_mass"):
+		return parent
+	return null

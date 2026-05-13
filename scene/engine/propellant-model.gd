@@ -1,28 +1,43 @@
-## Node-backed mutable propellant state for a standalone engine assembly.
+## Chapter: The Tank Becomes a Component
 ##
-## This is a `RigidBody3D` so the tank can exist as an authored scene node. The
-## active engine path keeps runtime fuel state here; legacy `scene/vessel` code
-## still uses `MassModel` until that prototype is retired.
+## A propellant tank used to be able to masquerade as its own rigid body. In the
+## single-body vessel model, that would create a second physics authority and a
+## joint where the ship only needs a mass ledger. `PropellantModel` is now the
+## tank-shaped component that preserves the fuel story without splitting the
+## craft into separate dynamic bodies.
+##
+## The component contributes an authored collision shape, dry container mass,
+## and remaining propellant mass to `VesselRigidBody3D`. Engines draw fuel
+## through `consume_propellant(...)`; the tank reports the actual amount burned,
+## emits `mass_changed`, and asks the parent vessel to refresh total mass and
+## center of mass.
+##
+## The class deliberately does not apply gravity, thrust, or drag. Those forces
+## belong to the vessel root, which keeps the tank, engine, and future payloads
+## moving as one compound body.
 class_name PropellantModel
 
-extends GravityRigidBody3D
+extends CollisionShape3D
 
+## Emitted whenever dry or propellant mass changes and the vessel should refresh
+## aggregate mass properties.
+signal mass_changed
 
 @export
 ## Dry mass of the propellant container, in kilograms.
 var dry_mass: float = 0.0:
 	set(p_value):
 		dry_mass = maxf(p_value, 0.0)
-		_update_mass()
+		_notify_mass_changed()
 
 
 @export
-## Initial propellant mass, in kilograms. Editing this reloads the tank to its
-## initial wet mass; runtime burn state is represented by `mass - dry_mass`.
+## Remaining propellant mass, in kilograms. Editing this reloads the tank to the
+## chosen fuel load; runtime burn state is stored directly in this property.
 var propellant_mass: float = 0.0:
 	set(p_value):
 		propellant_mass = maxf(p_value, 0.0)
-		_update_mass()
+		_notify_mass_changed()
 
 
 ## Returns the current total tank mass in kilograms.
@@ -45,10 +60,14 @@ func consume_propellant(delta: float, propellant_flow: float) -> float:
 	var propellant_consumed := minf(propellant_flow * delta, propellant_mass)
 	propellant_mass -= propellant_consumed
 
-	_update_mass()
+	_notify_mass_changed()
 
 	return propellant_consumed
 
 
-func _update_mass():
-	mass = maxf(get_total_mass(), 0.000001)
+## Notifies direct listeners and the parent vessel that the mass ledger changed.
+func _notify_mass_changed() -> void:
+	mass_changed.emit()
+	var vessel = get_parent()
+	if vessel != null and vessel.has_method("sync_mass_properties"):
+		vessel.sync_mass_properties()

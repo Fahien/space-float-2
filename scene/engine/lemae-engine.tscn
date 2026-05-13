@@ -64,26 +64,22 @@ rings = 0
 cap_top = false
 cap_bottom = false
 
-[node name="LemaeEngine" type="RigidBody3D" unique_id=464772022 node_paths=PackedStringArray("plume", "info")]
-mass = 100.0
-can_sleep = false
+[node name="LemaeEngine" type="CollisionShape3D" unique_id=464772022 node_paths=PackedStringArray("plume", "info")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+shape = SubResource("CylinderShape3D_b5lh5")
 script = ExtResource("1_kowjs")
 propulsion_model = SubResource("Resource_xp77y")
 plume = NodePath("Plume")
 info = NodePath("Info")
+thrust_origin_local = Vector3(0, -0.25, 0)
 
 [node name="Info" type="Node" parent="." unique_id=853443548]
 script = ExtResource("3_xp77y")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2083866638]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
-shape = SubResource("CylinderShape3D_b5lh5")
-
 [node name="rocket_baseA2" parent="." unique_id=2057328868 instance=ExtResource("1_yaa15")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.25, -1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.5, -1.5)
 
 [node name="Selectable3D" type="Area3D" parent="." unique_id=1484557443 node_paths=PackedStringArray("anchor", "command_receiver", "info")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
 script = ExtResource("3_6gmbg")
 anchor = NodePath("Anchor")
 command_receiver = NodePath("../CommandReceiver")
@@ -97,11 +93,12 @@ shape = SubResource("SphereShape3D_3hl4c")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 
 [node name="CommandReceiver" type="Node3D" parent="." unique_id=1460482187 node_paths=PackedStringArray("engine_model")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
 script = ExtResource("4_3hl4c")
 engine_model = NodePath("..")
 
 [node name="Plume" type="MeshInstance3D" parent="." unique_id=1225193478]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.25, 0)
 visible = false
 mesh = SubResource("CylinderMesh_iny3f")
 

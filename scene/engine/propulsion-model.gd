@@ -7,21 +7,22 @@
 ## craft by itself; it records the terms under which an engine may be asked to
 ## fly.
 ##
-## The class now belongs to `scene/engine` because the active propulsion path is
-## a standalone engine assembly, not the retiring `scene/vessel` prototype.
-## `EngineModel` reads this resource during physics integration,
-## `PropellantModel` accounts for available fuel, and command receivers supply
-## normalized throttle and gimbal input. Older vessel scripts may still refer to
-## `PropulsionModel` while they are phased out, but they are historical clients
-## rather than the owner of this contract.
+## The class belongs to `scene/engine` because the active propulsion path is now
+## an engine component installed under `VesselRigidBody3D`, not the retiring
+## `scene/vessel` prototype. `EngineModel` reads this resource while resolving
+## the vessel's per-step force contribution, `PropellantModel` accounts for
+## available fuel, and command receivers supply normalized throttle and gimbal
+## input. Older vessel scripts may still refer to `PropulsionModel` while they
+## are phased out, but they are historical clients rather than the owner of this
+## contract.
 ##
 ## The contract remains deliberately narrow. Throttle maps linearly to requested
 ## thrust and propellant flow; gimbal commands become clamped actuator targets;
-## slew rate tells adapters how quickly an ideal command becomes a physical
-## angle. World-space force, tank depletion, plume transforms, and rigid-body
-## integration stay in scene adapters. Keeping that frontier clear lets engine
-## scenes share propulsion figures without carrying the old vessel scene's
-## assumptions forward.
+## slew rate tells components how quickly an ideal command becomes a physical
+## angle. Scene-space force, tank depletion, plume transforms, and rigid-body
+## integration stay outside the resource. Keeping that frontier clear lets
+## engine scenes share propulsion figures without carrying the old vessel
+## scene's assumptions forward.
 
 class_name PropulsionModel
 
@@ -33,8 +34,8 @@ extends Resource
 ## - primary scalar tuning knob for propulsion authority
 ##
 ## Runtime role:
-## - read by engine adapters to convert throttle into requested force magnitude
-## - applied in scene space later by the owning rigid-body adapter
+## - read by engine components to convert throttle into requested force magnitude
+## - applied in scene space later by the owning vessel body
 ##
 ## Interaction:
 ## - does not set burn duration by itself; pair with
@@ -47,10 +48,10 @@ extends Resource
 ## duration and mass depletion, not direction or mounting.
 @export var max_propellant_flow_kg_per_s := 1.0
 
-## Maximum nozzle deflection around the adapter-local pitch axis, in degrees.
+## Maximum nozzle deflection around the component-local pitch axis, in degrees.
 ##
 ## Frame:
-## - adapter-local actuator space
+## - component-local actuator space
 ##
 ## Runtime role:
 ## - converted to radians and used to clamp pitch commands
@@ -74,11 +75,11 @@ extends Resource
 ## Maximum actuator slew rate for configured gimbal axes, in degrees per second.
 ##
 ## Why it is exposed:
-## - active engine adapters model physical thrust redirection as a response that
+## - active engine components model physical thrust redirection as a response that
 ##   lags behind command input instead of snapping instantly
 ##
 ## Runtime role:
-## - used by adapters that slew from command input toward target gimbal angles
+## - used by components that slew from command input toward target gimbal angles
 ## - affects simulation thrust direction and mirrored render exhaust where used
 ##
 ## Safety:

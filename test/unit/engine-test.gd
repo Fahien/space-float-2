@@ -1,3 +1,16 @@
+## Chapter: Engine Tests for the Single-Body Vessel
+##
+## These tests mark the boundary between the old engine-as-rigid-body prototype
+## and the current component model. They keep the propulsion contract honest:
+## commands still clamp throttle and gimbal input, fuel still limits thrust,
+## selection data still reports the vessel's environment, and the authored LAMAE
+## scene now contains exactly one rigid body.
+##
+## The suite is intentionally close to the public script API. A future refactor
+## may change visuals or scene nesting, but it should preserve the same outcomes:
+## component dry mass stays separate from tank mass, propellant burn updates the
+## vessel mass ledger, and no joint is required for the engine and tank to fly as
+## one craft.
 extends GdUnitTestSuite
 
 
@@ -89,9 +102,11 @@ func test_engine_model_clears_reported_thrust_when_throttle_released() -> void:
 func test_engine_model_reports_current_primary_body_name() -> void:
 	var propellant_model := auto_free(PropellantModel.new()) as PropellantModel
 	var info := auto_free(Selectable3DInfo.new()) as Selectable3DInfo
-	var engine_model := auto_free(EngineModel.new()) as EngineModel
+	var vessel = auto_free(VesselRigidBody3D.new())
+	var engine_model := EngineModel.new()
 	var body := auto_free(CelestialBody3D.new()) as CelestialBody3D
 	body.name = "Earth"
+	vessel.add_child(engine_model)
 	engine_model.propellant_model = propellant_model
 	engine_model.info = info
 
@@ -99,7 +114,7 @@ func test_engine_model_reports_current_primary_body_name() -> void:
 
 	assert_str(info.info["celestial_body"]).is_equal("None")
 
-	engine_model.current_primary = body
+	vessel.current_primary = body
 	engine_model._update_info()
 
 	assert_str(info.info["celestial_body"]).is_equal("Earth")
@@ -123,3 +138,58 @@ func test_engine_model_slews_gimbal_angles() -> void:
 		Vector2(7.5, -5.0),
 		Vector2(0.0001, 0.0001)
 	)
+
+
+func test_engine_model_component_mass_excludes_propellant_tank() -> void:
+	var propellant_model := auto_free(PropellantModel.new()) as PropellantModel
+	propellant_model.dry_mass = 10.0
+	propellant_model.propellant_mass = 90.0
+
+	var engine_model := auto_free(EngineModel.new()) as EngineModel
+	engine_model.engine_mass = 125.0
+	engine_model.propellant_model = propellant_model
+
+	assert_float(engine_model.get_total_mass()).is_equal_approx(125.0, 0.000001)
+	assert_float(propellant_model.get_total_mass()).is_equal_approx(100.0, 0.000001)
+
+
+func test_lamae_scene_uses_one_rigid_body_and_component_masses() -> void:
+	var scene := load("res://scene/engine/lamae.tscn") as PackedScene
+	var vessel = auto_free(scene.instantiate())
+	add_child(vessel)
+
+	var rigid_bodies: Array[Node] = []
+	var joints: Array[Node] = []
+	_collect_rigid_bodies_and_joints(vessel, rigid_bodies, joints)
+
+	assert_int(rigid_bodies.size()).is_equal(1)
+	assert_object(rigid_bodies[0]).is_same(vessel)
+	assert_int(joints.size()).is_equal(0)
+
+	var engine := vessel.get_node("LemaeEngine") as EngineModel
+	var tank := vessel.get_node("PropellantTank") as PropellantModel
+
+	assert_object(engine).is_not_null()
+	assert_object(tank).is_not_null()
+	assert_float(engine.get_total_mass()).is_equal_approx(100.0, 0.000001)
+	assert_float(tank.get_total_mass()).is_equal_approx(100.0, 0.000001)
+	assert_float(vessel.get_total_mass()).is_equal_approx(200.0, 0.000001)
+
+	tank.consume_propellant(1.0, 10.0)
+
+	assert_float(vessel.get_total_mass()).is_equal_approx(190.0, 0.000001)
+	assert_float(vessel.mass).is_equal_approx(190.0, 0.000001)
+
+
+func _collect_rigid_bodies_and_joints(
+	node: Node,
+	rigid_bodies: Array[Node],
+	joints: Array[Node]
+) -> void:
+	if node is RigidBody3D:
+		rigid_bodies.append(node)
+	if node is Joint3D:
+		joints.append(node)
+
+	for child in node.get_children():
+		_collect_rigid_bodies_and_joints(child, rigid_bodies, joints)
