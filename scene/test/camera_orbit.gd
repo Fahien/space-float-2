@@ -126,6 +126,8 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_pressed("zoom_out"):
 		target_zoom = clamp(target_zoom + zoom_step, min_zoom, max_zoom)
 
+	zoom_step = target_zoom / 2.0
+
 
 ## Accumulates local orbit intent from mouse input.
 ##

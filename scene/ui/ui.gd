@@ -2,6 +2,8 @@
 ##
 ## The panel owns presentation only; selected scenes own the dictionary keys and
 ## update their values at their own cadence.
+class_name Ui
+
 extends CanvasLayer
 
 @onready var vbox := $Margin/Panel/Margin/VBox
@@ -75,6 +77,10 @@ func _format_value(key: String, value: Variant) -> String:
 			return "%.1f m/s" % value
 		"altitude":
 			return "%.1f m" % value
+		"eccentricity":
+			return "%.4f" % value
+		"periapsis", "apoapsis":
+			return _format_distance_or_na(value)
 		"throttle":
 			return "%.0f%%" % (value * 100.0)
 		"gimbal":
@@ -83,6 +89,14 @@ func _format_value(key: String, value: Variant) -> String:
 			return "(%.1f°, %.1f°)" % [rad_to_deg(value.x), rad_to_deg(value.y)]
 		_:
 			return str(value)
+
+
+func _format_distance_or_na(value: Variant) -> String:
+	if value == null:
+		return "N/A"
+	if typeof(value) == TYPE_FLOAT and is_inf(value):
+		return "N/A"
+	return "%.1f m" % float(value)
 
 
 ## Rebuilds rows when the active selectable changes.

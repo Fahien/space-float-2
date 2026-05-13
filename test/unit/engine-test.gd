@@ -174,9 +174,11 @@ func test_vessel_command_receiver_reports_current_primary_body_name() -> void:
 	var receiver := VesselCommandReceiver.new()
 	receiver.info = info
 	vessel.add_child(receiver)
+	add_child(vessel)
 
 	var body := auto_free(CelestialBody3D.new()) as CelestialBody3D
 	body.name = "Earth"
+	add_child(body)
 
 	receiver._update_info()
 
@@ -186,6 +188,31 @@ func test_vessel_command_receiver_reports_current_primary_body_name() -> void:
 	receiver._update_info()
 
 	assert_str(info.info["celestial_body"]).is_equal("Earth")
+
+
+func test_vessel_command_receiver_reports_orbital_parameters() -> void:
+	var vessel := auto_free(VesselRigidBody3D.new()) as VesselRigidBody3D
+
+	var info := auto_free(Selectable3DInfo.new()) as Selectable3DInfo
+	var receiver := VesselCommandReceiver.new()
+	receiver.info = info
+	vessel.add_child(receiver)
+	add_child(vessel)
+	vessel.global_position = Vector3(20.0, 0.0, 0.0)
+	vessel.linear_velocity = Vector3(0.0, sqrt(100.0 / 20.0), 0.0)
+
+	var body := auto_free(CelestialBody3D.new()) as CelestialBody3D
+	body.name = "Primary"
+	body.radius = 10.0
+	body.mu = 100.0
+	add_child(body)
+	vessel.current_primary = body
+
+	receiver._update_info()
+
+	assert_float(info.info["eccentricity"]).is_equal_approx(0.0, 0.000001)
+	assert_float(info.info["periapsis"]).is_equal_approx(10.0, 0.000001)
+	assert_float(info.info["apoapsis"]).is_equal_approx(10.0, 0.000001)
 
 
 func test_vessel_command_receiver_aggregates_propellant_mass_in_info() -> void:
@@ -398,12 +425,16 @@ func test_lamae_scene_has_vessel_level_selectable_and_command_receiver() -> void
 	var selectable := vessel.get_node("Selectable3D") as Selectable3D
 	var receiver := vessel.get_node("VesselCommandReceiver") as VesselCommandReceiver
 	var info := vessel.get_node("Info") as Selectable3DInfo
+	var trajectory: Variant = vessel.get_node("OrbitTrajectory")
 
 	assert_object(selectable).is_not_null()
 	assert_object(receiver).is_not_null()
 	assert_object(info).is_not_null()
+	assert_object(trajectory).is_not_null()
 	assert_object(selectable.get_command_receiver()).is_same(receiver)
 	assert_object(selectable.get_info()).is_same(info)
+	assert_object(trajectory.get("body")).is_same(vessel)
+	assert_bool(trajectory.is_set_as_top_level()).is_false()
 	assert_int(receiver.get_active_engines().size()).is_equal(1)
 	assert_object(receiver.get_active_engines()[0]).is_same(vessel.get_node("LamaeEngine"))
 

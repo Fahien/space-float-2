@@ -12,7 +12,10 @@ height = 0.8
 [sub_resource type="Resource" id="Resource_xp77y"]
 script = ExtResource("2_iny3f")
 max_thrust_newtons = 16000.0
-gimbal_slew_degrees_per_second = 5.0
+max_propellant_flow_kg_per_s = 0.1
+max_gimbal_pitch_degrees = 1.0
+max_gimbal_yaw_degrees = 1.0
+gimbal_slew_degrees_per_second = 0.5
 metadata/_custom_type_script = "uid://cwu6natuhnirq"
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_onl8b"]
@@ -68,7 +71,6 @@ engine_mass = null
 
 [node name="rocket_baseA2" parent="." unique_id=2057328868 instance=ExtResource("1_yaa15")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.5, -1.5)
-
 
 [node name="Plume" type="MeshInstance3D" parent="." unique_id=1225193478]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.25, 0)

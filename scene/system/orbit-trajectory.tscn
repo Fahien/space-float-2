@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://cn80bvu6pjpw0"]
+
+[ext_resource type="Script" path="res://scene/system/orbit-trajectory-3d.gd" id="1_2y3jj"]
+
+[sub_resource type="ImmediateMesh" id="ImmediateMesh_2y3jj"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2y3jj"]
+albedo_color = Color(1, 0.15, 0.08, 1)
+no_depth_test = true
+shading_mode = 0
+
+[node name="OrbitTrajectory" type="MeshInstance3D" unique_id=1445164214]
+mesh = SubResource("ImmediateMesh_2y3jj")
+script = ExtResource("1_2y3jj")
+material = SubResource("StandardMaterial3D_2y3jj")

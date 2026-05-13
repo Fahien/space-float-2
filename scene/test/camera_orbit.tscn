@@ -4,6 +4,10 @@
 
 [node name="CameraOrbitRoot" type="Node3D" unique_id=188560390]
 script = ExtResource("1_4sq6p")
+zoom_step = 20000.0
+zoom_responsiveness = 1200.0
+min_zoom = 40.0
+max_zoom = 40000000.0
 target_follow_responsiveness = 1000.0
 
 [node name="YawPivot" type="Node3D" parent="." unique_id=127911199]
@@ -11,7 +15,7 @@ target_follow_responsiveness = 1000.0
 [node name="PitchPivot" type="Node3D" parent="YawPivot" unique_id=949979417]
 
 [node name="SpringArm3D" type="SpringArm3D" parent="YawPivot/PitchPivot" unique_id=1058564852]
-spring_length = 4.0
+spring_length = 40000000.0
 margin = 2.0
 
 [node name="Camera3D" type="Camera3D" parent="YawPivot/PitchPivot/SpringArm3D" unique_id=1848053357]

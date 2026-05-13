@@ -98,12 +98,15 @@ func _update_info() -> void:
 	info.info["total_mass"] = vessel.get_total_mass()
 	info.info["speed"] = vessel.linear_velocity.length()
 
+	_clear_orbital_info()
 	info.info["celestial_body"] = "None"
-	if vessel.current_primary != null:
-		info.info["celestial_body"] = vessel.current_primary.name
-		info.info["altitude"] = vessel.current_primary.get_altitude_at(vessel.global_position)
-		var up := vessel.current_primary.get_up_at(vessel.global_position)
+	if vessel.current_primary != null and is_instance_valid(vessel.current_primary):
+		var primary := vessel.current_primary
+		info.info["celestial_body"] = primary.name
+		info.info["altitude"] = primary.get_altitude_at(vessel.global_position)
+		var up := primary.get_up_at(vessel.global_position)
 		info.info["vertical_speed"] = vessel.linear_velocity.dot(up)
+		_update_orbital_info(vessel, primary)
 
 	var propellant_mass := 0.0
 	for engine in _active_engines:
@@ -116,6 +119,33 @@ func _update_info() -> void:
 		info.info["throttle"] = engine.get_throttle()
 		info.info["gimbal"] = engine.get_gimbal()
 		info.info["gimbal_angles"] = engine.get_gimbal_angles()
+
+
+func _update_orbital_info(vessel: VesselRigidBody3D, primary: CelestialBody3D) -> void:
+	if primary.mu <= 0.0:
+		return
+
+	var elements := OrbitalElements.new()
+	elements.set_from_state_vector(
+		vessel.global_position - primary.global_position,
+		vessel.linear_velocity,
+		primary.mu
+	)
+	if elements.is_degenerate():
+		return
+
+	info.info["eccentricity"] = elements.eccentricity
+	info.info["periapsis"] = elements.periapsis - primary.radius
+	if elements.is_closed():
+		info.info["apoapsis"] = elements.apoapsis - primary.radius
+	else:
+		info.info["apoapsis"] = null
+
+
+func _clear_orbital_info() -> void:
+	info.info.erase("eccentricity")
+	info.info.erase("periapsis")
+	info.info.erase("apoapsis")
 
 
 func _get_vessel() -> VesselRigidBody3D:
