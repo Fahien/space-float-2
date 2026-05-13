@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b45uh68xr7oil" path="res://scene/engine/engine-model.gd" id="1_kowjs"]
 [ext_resource type="PackedScene" uid="uid://xokdgimkf8l6" path="res://model/rocket_baseA.glb" id="1_yaa15"]
-[ext_resource type="Script" uid="uid://cwu6natuhnirq" path="res://scene/vessel/propulsion-model.gd" id="2_iny3f"]
+[ext_resource type="Script" uid="uid://cwu6natuhnirq" path="res://scene/engine/propulsion-model.gd" id="2_iny3f"]
 [ext_resource type="Script" uid="uid://r13biy7i0iye" path="res://scene/selection/selectable-3d.gd" id="3_6gmbg"]
 [ext_resource type="Script" uid="uid://0gr43c5yvaqv" path="res://scene/selection/selectable-3d-info.gd" id="3_xp77y"]
 [ext_resource type="Script" uid="uid://ba5egfqt32co" path="res://scene/command/engine-command-receiver.gd" id="4_3hl4c"]
