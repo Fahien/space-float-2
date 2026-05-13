@@ -391,7 +391,7 @@ func test_vessel_command_receiver_respects_active_engine_subset() -> void:
 
 
 func test_lamae_scene_has_vessel_level_selectable_and_command_receiver() -> void:
-	var scene := load("res://scene/engine/lamae.tscn") as PackedScene
+	var scene := load("res://scene/craft/lamae.tscn") as PackedScene
 	var vessel = auto_free(scene.instantiate())
 	add_child(vessel)
 
@@ -409,7 +409,7 @@ func test_lamae_scene_has_vessel_level_selectable_and_command_receiver() -> void
 
 
 func test_lamae_scene_uses_one_rigid_body_and_component_masses() -> void:
-	var scene := load("res://scene/engine/lamae.tscn") as PackedScene
+	var scene := load("res://scene/craft/lamae.tscn") as PackedScene
 	var vessel = auto_free(scene.instantiate())
 	add_child(vessel)
 
