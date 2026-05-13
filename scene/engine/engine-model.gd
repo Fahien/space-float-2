@@ -165,8 +165,8 @@ func get_thrust_magnitude() -> float:
 
 ## Resolves one gimbal-actuator step and returns the actual local gimbal basis.
 ##
-## The harness currently recenters to neutral whenever the pilot is not
-## commanding deflection, so released inputs do not leave the engine canted.
+## Command input recenters to neutral whenever the pilot is not commanding
+## deflection, so released controls do not leave the engine canted.
 func resolve_gimbal_step(delta: float) -> Basis:
 	if delta <= 0.0 or propulsion_model == null:
 		return get_actual_gimbal_basis_local()

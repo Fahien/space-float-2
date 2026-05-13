@@ -1,13 +1,27 @@
-## Pure propulsion-performance model shared by scene adapters.
+## Chapter: The Engine's Contract
 ##
-## This class maps throttle to scalar outputs:
-## - thrust magnitude in Newtons
-## - propellant flow in kg/s
-## - bounded gimbal target angles
+## Spaceflight engineering begins with a small inventory of promises: how much
+## force an engine can give, how quickly it spends propellant, and how far its
+## nozzle can turn before the machinery reaches its stops. `PropulsionModel`
+## keeps those promises together as authored engine doctrine. It does not fly a
+## craft by itself; it records the terms under which an engine may be asked to
+## fly.
 ##
-## It deliberately does not know about scene nodes, propellant storage,
-## thruster transforms, or world-space force vectors. Those stay in adapters
-## such as `VesselState` / `VesselModel` and `EngineModel`.
+## The class now belongs to `scene/engine` because the active propulsion path is
+## a standalone engine assembly, not the retiring `scene/vessel` prototype.
+## `EngineModel` reads this resource during physics integration,
+## `PropellantModel` accounts for available fuel, and command receivers supply
+## normalized throttle and gimbal input. Older vessel scripts may still refer to
+## `PropulsionModel` while they are phased out, but they are historical clients
+## rather than the owner of this contract.
+##
+## The contract remains deliberately narrow. Throttle maps linearly to requested
+## thrust and propellant flow; gimbal commands become clamped actuator targets;
+## slew rate tells adapters how quickly an ideal command becomes a physical
+## angle. World-space force, tank depletion, plume transforms, and rigid-body
+## integration stay in scene adapters. Keeping that frontier clear lets engine
+## scenes share propulsion figures without carrying the old vessel scene's
+## assumptions forward.
 
 class_name PropulsionModel
 
@@ -19,7 +33,7 @@ extends Resource
 ## - primary scalar tuning knob for propulsion authority
 ##
 ## Runtime role:
-## - read by scene adapters to convert throttle into requested force magnitude
+## - read by engine adapters to convert throttle into requested force magnitude
 ## - applied in scene space later by the owning rigid-body adapter
 ##
 ## Interaction:
@@ -51,16 +65,17 @@ extends Resource
 
 ## Optional roll command limit, in degrees.
 ##
-## Rolling around the thrust axis does not redirect a single engine's thrust.
-## `EngineModel` ignores this axis; the standalone vessel harness still uses it
-## for its torque-control prototype.
+## Rolling around the thrust axis does not redirect a single engine's thrust,
+## so `EngineModel` ignores this axis. The value remains in the resource for
+## command compatibility, future multi-actuator layouts, and legacy vessel code
+## that may read it until that path is retired.
 @export_range(0.0, 3000.0, 1.0) var max_gimbal_roll_degrees := 0.0
 
 ## Maximum actuator slew rate for configured gimbal axes, in degrees per second.
 ##
 ## Why it is exposed:
-## - the harness wants physical thrust redirection to lag behind command input
-##   instead of snapping instantly
+## - active engine adapters model physical thrust redirection as a response that
+##   lags behind command input instead of snapping instantly
 ##
 ## Runtime role:
 ## - used by adapters that slew from command input toward target gimbal angles
@@ -79,12 +94,12 @@ func get_thrust_magnitude(throttle: float) -> float:
 
 
 ## Returns requested propellant flow for the given throttle command.
-## Actual fuel use may be lower if the vessel runs out of propellant mid-step.
+## Actual fuel use may be lower if the attached tank runs dry mid-step.
 func get_propellant_flow(throttle: float) -> float:
 	return max_propellant_flow_kg_per_s * clampf(throttle, 0.0, 1.0)
 
 
-## Returns the configured gimbal limits in radians for pitch, yaw, and roll.
+## Returns configured gimbal limits in radians for pitch, yaw, and compatibility roll.
 func get_gimbal_limit_radians() -> Vector3:
 	return Vector3(
 		deg_to_rad(maxf(max_gimbal_pitch_degrees, 0.0)),

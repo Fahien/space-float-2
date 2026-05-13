@@ -1,7 +1,8 @@
 ## Node-backed mutable propellant state for a standalone engine assembly.
 ##
 ## This is a `RigidBody3D` so the tank can exist as an authored scene node. The
-## resource-only vessel harness uses `MassModel` instead.
+## active engine path keeps runtime fuel state here; legacy `scene/vessel` code
+## still uses `MassModel` until that prototype is retired.
 class_name PropellantModel
 
 extends GravityRigidBody3D
