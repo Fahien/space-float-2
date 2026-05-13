@@ -64,7 +64,23 @@ func _sync_labels(info_source: Selectable3DInfo) -> void:
 			_labels[key] = label
 
 		var value = info_source.info[key]
-		label.text = "%s: %s" % [key.capitalize(), str(value)]
+		label.text = "%s: %s" % [key.capitalize(), _format_value(key, value)]
+
+
+func _format_value(key: String, value: Variant) -> String:
+	match key:
+		"total_mass", "propellant_mass":
+			return "%.1f kg" % value
+		"speed":
+			return "%.1f m/s" % value
+		"throttle":
+			return "%.0f%%" % (value * 100.0)
+		"gimbal":
+			return "(%.2f, %.2f)" % [value.x, value.y]
+		"gimbal_angles":
+			return "(%.1f°, %.1f°)" % [rad_to_deg(value.x), rad_to_deg(value.y)]
+		_:
+			return str(value)
 
 
 ## Rebuilds rows when the active selectable changes.
