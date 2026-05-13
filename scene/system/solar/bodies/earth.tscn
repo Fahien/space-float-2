@@ -1,17 +1,23 @@
 [gd_scene format=3 uid="uid://fbuj2aqj1wbf"]
 
 [ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="1_hw4fg"]
-[ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/system/celestial-body-model.gd" id="1_uho2q"]
+[ext_resource type="Script" uid="uid://tvmhliwnds1l" path="res://scene/system/celestial-body-3d.gd" id="1_uho2q"]
+[ext_resource type="Script" uid="uid://b8aftbf2tcsuo" path="res://scene/sim/atmosphere-model.gd" id="2_ctbkc"]
 [ext_resource type="PackedScene" uid="uid://c3x4fdu3o1dpa" path="res://scene/engine/lamae.tscn" id="3_o23ev"]
 [ext_resource type="PackedScene" uid="uid://ebcwe2nqwieb" path="res://model/flag-red.glb" id="3_q8l8h"]
 [ext_resource type="PackedScene" uid="uid://dhi3qrjim6wug" path="res://scene/test/camera_orbit.tscn" id="5_6egep"]
 [ext_resource type="PackedScene" uid="uid://bjtp1iqip2ey6" path="res://scene/system/solar/bodies/moon.tscn" id="6_7uqqb"]
+
+[sub_resource type="Resource" id="Resource_uwlq5"]
+script = ExtResource("2_ctbkc")
+metadata/_custom_type_script = "uid://b8aftbf2tcsuo"
 
 [node name="Earth" type="BigGrid3D" unique_id=1098988874]
 script = ExtResource("1_uho2q")
 planet_name = "Earth"
 radius = 6371000.0
 mu = 398600441800000.0
+atmosphere_model = SubResource("Resource_uwlq5")
 
 [node name="Globe" parent="." unique_id=493463791 instance=ExtResource("1_hw4fg")]
 transform = Transform3D(637.1, 0, 0, 0, 637.1, 0, 0, 0, 637.1, 0, 0, 0)

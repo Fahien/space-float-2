@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://drb0gb235asdd"]
 
 [ext_resource type="PackedScene" uid="uid://1lxuuxy2kydt" path="res://scene/globe/globe.tscn" id="1_81i6o"]
-[ext_resource type="Script" uid="uid://dsp2bixgup4yv" path="res://scene/system/celestial-body-model.gd" id="1_t35bx"]
+[ext_resource type="Script" uid="uid://tvmhliwnds1l" path="res://scene/system/celestial-body-3d.gd" id="1_t35bx"]
 [ext_resource type="Shader" uid="uid://btihf23iuiva4" path="res://scene/system/solar/bodies/sun.gdshader" id="2_t35bx"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_457ta"]

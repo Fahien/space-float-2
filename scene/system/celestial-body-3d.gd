@@ -1,14 +1,21 @@
-## Scene-authored celestial gravity source.
+## Chapter: A celestial body as a local environment.
 ##
-## Celestial body scenes attach this script to the node that marks the body's
-## current gravity center. When the node enters the tree, it registers with
-## `CelestialBodySystem`; affected rigid bodies then query the system for the
-## summed acceleration from every registered source.
+## A visible planet is only one part of the simulation contract. The active
+## solar-system scene also needs a body that can register gravity, define a mean
+## surface, answer "up" and altitude, and eventually supply the local air that
+## drag and flight instruments should use. `CelestialBody3D` is that authored
+## boundary between scene composition and physics queries.
 ##
-## The model owns only static source parameters and local radial queries. It does
-## not move planets, solve orbits, stream terrain, or apply forces by itself.
-## Positions are interpreted in the same scene-space meter frame used by the
-## current physics step.
+## When the node enters the tree, it registers with `CelestialBodySystem`.
+## Rigid bodies then receive gravity from the system's full source
+## superposition, while local-environment helpers can ask the current primary
+## body for altitude, radial up, or optional air density. A missing atmosphere
+## model means vacuum, so airless bodies keep the same script without carrying
+## Earth-specific behavior.
+##
+## This script still does not move planets, solve orbits, stream terrain, or
+## apply forces by itself. It records source data and radial environment queries
+## in the same scene-space meter frame used by the current physics step.
 class_name CelestialBody3D
 
 extends Node3D
@@ -33,6 +40,13 @@ extends Node3D
 ## This value controls acceleration returned by `acceleration_at(...)`; it does
 ## not move this node or any other scene node by itself.
 @export_custom(PROPERTY_HINT_NONE, "suffix: m³/s²") var mu: float = 0.0
+
+## Optional atmosphere model sampled by body-local altitude.
+##
+## Leave this unset for vacuum bodies. The first implementation uses an
+## Earth-style standard atmosphere, but the export keeps the ownership on the
+## celestial body instead of in a global helper or vessel-specific harness.
+@export var atmosphere_model: AtmosphereModel = null
 
 
 func _enter_tree() -> void:
@@ -78,6 +92,8 @@ func acceleration_at(p_position: Vector3) -> Vector3:
 
 
 ## Returns radial altitude above this body's mean surface.
+##
+## Negative values indicate positions below the configured mean radius.
 func get_altitude_at(p_position: Vector3) -> float:
 	var r := (p_position - _get_center()).length()
 	return r - radius
@@ -89,3 +105,16 @@ func get_up_at(p_position: Vector3) -> Vector3:
 	if offset.length_squared() <= 0.000001:
 		return Vector3.ZERO
 	return offset.normalized()
+
+
+## Returns atmospheric density at `p_position` in kg/m^3.
+##
+## Airless bodies return zero. Atmospheric bodies convert the scene-space
+## position to radial altitude and delegate the density curve to the owned
+## `AtmosphereModel` resource.
+func get_air_density_at(p_position: Vector3) -> float:
+	if atmosphere_model == null:
+		return 0.0
+
+	var altitude: float = get_altitude_at(p_position)
+	return atmosphere_model.get_density_at(altitude)
