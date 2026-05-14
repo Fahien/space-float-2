@@ -1,0 +1,149 @@
+name: Godot CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
+env:
+  GODOT_LINUX_URL: ${{ vars.GODOT_LINUX_URL }}
+  GODOT_LINUX_SHA256: ${{ vars.GODOT_LINUX_SHA256 }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  scripts:
+    name: Scripts and Load Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restore Godot cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/space-float-2/godot
+          key: godot-${{ runner.os }}-${{ vars.GODOT_LINUX_SHA256 }}
+
+      - name: Install Godot
+        run: python3 tools/ci/install_godot.py
+
+      - name: Install GdUnit4 addon
+        run: python3 tools/bootstrap-gdunit4.py
+
+      - name: Check scripts
+        run: python3 tools/ci/check_gdscript.py
+
+      - name: Check project load
+        run: |
+          mkdir -p target/reports
+          "$GODOT_BIN" --headless --log-file "$PWD/target/reports/load.log" --path . --quit
+
+      - name: Upload script reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: script-reports
+          path: target/reports/**
+          if-no-files-found: ignore
+
+  unit-tests:
+    name: GdUnit4 Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restore Godot cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/space-float-2/godot
+          key: godot-${{ runner.os }}-${{ vars.GODOT_LINUX_SHA256 }}
+
+      - name: Install Godot
+        run: python3 tools/ci/install_godot.py
+
+      - name: Install GdUnit4 addon
+        run: python3 tools/bootstrap-gdunit4.py
+
+      - name: Run unit tests
+        run: |
+          mkdir -p target/reports
+          "$GODOT_BIN" --headless --log-file "$PWD/target/reports/gdunit.log" --path . -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a res://test/unit
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdunit-reports
+          path: |
+            reports/**
+            target/reports/**
+          if-no-files-found: ignore
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    needs:
+      - scripts
+      - unit-tests
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restore Godot cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/space-float-2/godot
+          key: godot-${{ runner.os }}-${{ vars.GODOT_LINUX_SHA256 }}
+
+      - name: Build static API docs
+        run: python3 tools/ci/build_docs.py --install-godot --bootstrap-gdunit4
+
+      - name: Upload docs preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdscript-docs
+          path: target/docs/site/**
+          if-no-files-found: error
+
+      - name: Configure GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/docs/site
+
+      - name: Deploy GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/deploy-pages@v4
