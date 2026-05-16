@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://dhi3qrjim6wug"]
 
-[ext_resource type="Script" uid="uid://dikwsc5cxaom" path="res://scene/test/camera_orbit.gd" id="1_4sq6p"]
+[ext_resource type="Script" uid="uid://dikwsc5cxaom" path="res://scene/camera/camera-orbit.gd" id="1_5y654"]
 
 [node name="CameraOrbitRoot" type="Node3D" unique_id=188560390]
-script = ExtResource("1_4sq6p")
+script = ExtResource("1_5y654")
 zoom_step = 20000.0
 zoom_responsiveness = 1200.0
 min_zoom = 40.0

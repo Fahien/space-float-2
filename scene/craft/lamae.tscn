@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c3x4fdu3o1dpa"]
 
 [ext_resource type="Script" uid="uid://d35uwwg3mcb5o" path="res://scene/craft/vessel-rigid-body-3d.gd" id="1_ikea3"]
-[ext_resource type="Script" uid="uid://debbbv5vsy3y5" path="res://scene/sim/aerodynamics-model.gd" id="2_8evoc"]
+[ext_resource type="Script" uid="uid://debbbv5vsy3y5" path="res://scene/craft/aerodynamics-model.gd" id="2_8evoc"]
 [ext_resource type="PackedScene" uid="uid://d3uw88kymxrky" path="res://scene/engine/lamae-engine.tscn" id="3_qplh4"]
 [ext_resource type="PackedScene" uid="uid://bp368ab2thy5" path="res://scene/engine/propellant-tank.tscn" id="4_5v374"]
 [ext_resource type="Script" uid="uid://0gr43c5yvaqv" path="res://scene/selection/selectable-3d-info.gd" id="5_rd5if"]
