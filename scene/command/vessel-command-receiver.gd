@@ -121,6 +121,16 @@ func _update_info() -> void:
 		info.info["gimbal_angles"] = engine.get_gimbal_angles()
 
 
+## Computes instantaneous Keplerian orbital parameters from the vessel's state
+## vector relative to its current gravitational primary, and writes them to the
+## HUD info dictionary.
+##
+## Displayed values:
+##   - eccentricity: dimensionless conic shape (0 = circle, <1 = ellipse, >1 = hyperbola)
+##   - periapsis: altitude above surface at closest approach [m] (= r_p − R_body)
+##   - apoapsis: altitude above surface at farthest point [m], or null for escape trajectories
+##
+## See OrbitalElements for the underlying math (state vector → conic elements).
 func _update_orbital_info(vessel: VesselRigidBody3D, primary: CelestialBody3D) -> void:
 	if primary.mu <= 0.0:
 		return

@@ -9,39 +9,108 @@
 ## through the planet.
 ## Near-radial launch states use a short powered/coast fallback because the
 ## conic plane is otherwise undefined.
+##
+## Rendering strategy:
+## The orbit is sampled as a PRIMITIVE_LINE_STRIP on an ImmediateMesh, redrawn
+## every frame. Two distinct rendering modes exist:
+##
+## 1. CONIC MODE (normal orbital flight):
+##    Computes OrbitalElements from the state vector, then sweeps true anomaly θ
+##    from the vessel's current position forward. An adaptive subdivision scheme
+##    (bisection) refines segments that are too long or whose chord error exceeds
+##    a threshold, producing smooth curves near apoapsis where uniform θ sampling
+##    would create long straight chords.
+##    Reference: De Boor, "A Practical Guide to Splines" for adaptive refinement;
+##    the orbit equation r(θ) = p/(1+e·cos θ) from Curtis §2.6.
+##
+## 2. RADIAL FALLBACK (near-vertical launch/landing):
+##    When tangential speed is below a threshold, the orbital plane normal h = r×v
+##    is numerically unstable. Instead, a simple Euler integration forward-predicts
+##    position under gravity + current thrust for a fixed duration. This gives a
+##    short "where am I going" arc during launch/landing without requiring a
+##    well-defined conic.
+##
+## Collision clipping:
+##    Both modes clip the trajectory at the primary's surface radius, so
+##    suborbital arcs terminate at ground impact rather than passing through the
+##    planet. For conics this uses the orbit equation solved for the collision
+##    true anomaly; for radial mode it checks distance each Euler step.
+##
+## Coordinate frame:
+##    All drawn points are relative to the vessel's current position (the mesh
+##    origin). OrbitalElements produces points relative to the primary's focus,
+##    so we subtract relative_position before appending vertices.
+##
+## References:
+##   - Bate, Mueller & White, "Fundamentals of Astrodynamics" (1971)
+##   - Curtis, "Orbital Mechanics for Engineering Students" (4th ed.), Ch. 2 & 4
+##   - Vallado, "Fundamentals of Astrodynamics and Applications" (4th ed.)
+##   - https://en.wikipedia.org/wiki/Conic_section (orbit geometry)
+##   - https://en.wikipedia.org/wiki/Hyperbolic_trajectory (asymptote angle)
 class_name OrbitTrajectory3D
 
 extends MeshInstance3D
 
+## Safety margin from the true asymptote angle for hyperbolic orbits.
+## The orbit equation r(θ) = p/(1+e·cos θ) diverges at θ_∞ = ±acos(−1/e);
+## we stop just short to avoid infinite-radius points.
+## Reference: https://en.wikipedia.org/wiki/Hyperbolic_trajectory
 const HYPERBOLA_ASYMPTOTE_MARGIN := 0.01
+
+## Tolerance for comparing true anomaly values.
 const ANOMALY_EPSILON := 0.000001
-# Uniform true-anomaly samples create very long chords near high apoapsis.
-# These limits add local detail only where the rendered conic needs it.
+
+## Adaptive subdivision parameters for conic rendering.
+## Uniform true-anomaly samples produce unacceptably long chords near apoapsis
+## (where the vessel moves slowly and the curve is gentle but far from focus).
+## The renderer uses recursive bisection: if a segment's chord length or its
+## midpoint deviation from the true curve exceeds a threshold, it splits.
+## This is analogous to adaptive quadrature but applied to polyline fidelity.
 const MAX_CONIC_SUBDIVISION_DEPTH := 8
 const MAX_CONIC_POINT_COUNT := 4096
+
+## Segment length threshold as a fraction of the primary's radius.
+## Keeps line segments short enough to appear smooth at typical zoom levels.
 const CONIC_SEGMENT_LENGTH_TO_PRIMARY_RADIUS := 0.04
+
+## Maximum allowed chord error (deviation of the true midpoint from the linear
+## interpolant) as a fraction of primary radius. Controls curve smoothness.
 const CONIC_CHORD_ERROR_TO_PRIMARY_RADIUS := 0.0025
+
+## Absolute minimum thresholds (used when primary radius is very small or zero).
 const MIN_CONIC_SEGMENT_LENGTH := 100000.0
 const MIN_CONIC_CHORD_ERROR := 5000.0
 
+## The vessel whose orbit to predict and draw.
 @export var body: GravityRigidBody3D = null:
 	set(p_body):
 		body = p_body
 		update_configuration_warnings()
 
+## Number of uniformly-spaced true anomaly samples before adaptive subdivision.
+## Higher values produce smoother base curves but cost more even for simple orbits.
 @export_range(8, 512, 1) var segment_count: int = 128
+
+## Below this tangential speed [m/s], the orbit normal h = r×v is too noisy to
+## define a conic plane, so the renderer switches to radial (Euler) fallback.
 @export_custom(PROPERTY_HINT_NONE, "suffix: m/s")
 var radial_tangential_speed_threshold: float = 10.0
+
+## How far into the future [s] the radial fallback predicts (Euler integration).
 @export_custom(PROPERTY_HINT_NONE, "suffix: s")
 var radial_prediction_duration: float = 240.0
+
+## Polylines shorter than this [m] are not drawn, avoiding visual noise from
+## near-zero-velocity states or nearly-impacted suborbital hops.
 @export_custom(PROPERTY_HINT_NONE, "suffix: m")
 var minimum_visible_trajectory_length: float = 10.0
 
+## Line material. Typically uses no_depth_test=true so the orbit line renders
+## on top of geometry (visible through the planet body).
 @export var material: StandardMaterial3D = StandardMaterial3D.new()
 
 
 func _ready() -> void:
-	# Each vessel instance redraws independently; do not share the scene subresource mesh.
 	mesh = ImmediateMesh.new()
 	_redraw()
 
@@ -56,6 +125,8 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return PackedStringArray()
 
 
+## Main per-frame entry point. Decides between conic and radial rendering,
+## computes the orbital state, and draws the trajectory line strip.
 func _redraw() -> void:
 	var immediate := mesh as ImmediateMesh
 	if immediate == null:
@@ -74,6 +145,8 @@ func _redraw() -> void:
 	var non_gravity_acceleration := _current_non_gravity_acceleration()
 	global_transform = Transform3D(Basis.IDENTITY, body.global_position)
 
+	# Mode selection: if tangential speed is too low for a stable conic plane,
+	# or if OrbitalElements reports degenerate, use Euler radial fallback.
 	if _should_draw_radial_trajectory(relative_position, relative_velocity):
 		_draw_radial_trajectory(
 			immediate,
@@ -105,6 +178,18 @@ func _redraw() -> void:
 	_draw_conic_trajectory(immediate, elements, relative_position, primary.radius)
 
 
+## Draws the conic (elliptical or hyperbolic) trajectory as an adaptively-refined
+## line strip.
+##
+## Sweep range:
+##   - Ellipse: full orbit from current θ forward by 2π (one complete revolution).
+##   - Hyperbola: from current θ to the asymptote angle θ_∞ = acos(−1/e), with a
+##     small margin to avoid the singularity where r → ∞.
+##     Reference: https://en.wikipedia.org/wiki/Hyperbolic_trajectory
+##
+## After determining the angular range, the trajectory is clipped at planet
+## surface impact (if the periapsis dips below the collision radius), then
+## sampled with uniform base segments refined by adaptive bisection.
 func _draw_conic_trajectory(
 	immediate: ImmediateMesh,
 	elements: OrbitalElements,
@@ -114,6 +199,8 @@ func _draw_conic_trajectory(
 	var anomaly_start := elements.get_true_anomaly_for_position(relative_position)
 	var anomaly_end := anomaly_start + TAU
 	if not elements.is_closed():
+		# Hyperbolic asymptote: θ_∞ = acos(−1/e). Beyond this angle the orbit
+		# equation gives negative radius (physically meaningless).
 		var asymptote := acos(-1.0 / elements.eccentricity)
 		anomaly_start = clampf(
 			anomaly_start,
@@ -122,6 +209,7 @@ func _draw_conic_trajectory(
 		)
 		anomaly_end = asymptote - HYPERBOLA_ASYMPTOTE_MARGIN
 
+	# Clip at surface collision (suborbital impact point).
 	anomaly_end = _get_collision_limited_anomaly_end(
 		elements,
 		anomaly_start,
@@ -132,6 +220,7 @@ func _draw_conic_trajectory(
 	if anomaly_end <= anomaly_start:
 		return
 
+	# Build the polyline: uniform base samples + adaptive refinement.
 	var points := PackedVector3Array()
 	var segment_start_anomaly := anomaly_start
 	var previous_point := elements.get_orbit_point(segment_start_anomaly)
@@ -162,6 +251,22 @@ func _draw_conic_trajectory(
 	_commit_line_strip(immediate, points)
 
 
+## Recursively refines a single conic segment [θ_start, θ_end] via bisection.
+##
+## The algorithm evaluates the true orbit position at the midpoint anomaly and
+## compares it to the linear interpolant (chord midpoint). If either:
+##   - The chord is longer than max_segment_length, or
+##   - The midpoint deviation (chord error) exceeds max_chord_error,
+## the segment is split in half and each half is refined recursively.
+##
+## This is a form of adaptive curve tessellation that concentrates vertices
+## where the conic has high curvature (near periapsis) or long arcs (near
+## apoapsis), similar to de Casteljau subdivision for Bézier curves.
+##
+## Terminates when:
+##   - Both criteria are satisfied (segment is "flat enough"), or
+##   - Maximum recursion depth is reached, or
+##   - Point budget is exhausted.
 func _append_adaptive_conic_segment(
 	points: PackedVector3Array,
 	elements: OrbitalElements,
@@ -219,6 +324,8 @@ func _append_adaptive_conic_segment(
 	points.append(point_end - relative_position)
 
 
+## Computes the maximum allowed segment length, scaled to the primary's size.
+## Larger bodies need proportionally larger thresholds to avoid over-tessellation.
 func _get_maximum_conic_segment_length(collision_radius: float) -> float:
 	if collision_radius <= 0.0:
 		return MIN_CONIC_SEGMENT_LENGTH
@@ -228,6 +335,7 @@ func _get_maximum_conic_segment_length(collision_radius: float) -> float:
 	)
 
 
+## Computes the maximum allowed chord error, scaled to the primary's size.
 func _get_maximum_conic_chord_error(collision_radius: float) -> float:
 	if collision_radius <= 0.0:
 		return MIN_CONIC_CHORD_ERROR
@@ -237,6 +345,18 @@ func _get_maximum_conic_chord_error(collision_radius: float) -> float:
 	)
 
 
+## Finds the first true anomaly after anomaly_start where the orbit intersects
+## the primary's surface, and clips the trajectory there.
+##
+## Derivation: Starting from the orbit equation r(θ) = p/(1 + e·cos θ),
+## setting r = R_surface and solving for θ gives:
+##   cos θ_collision = (p/R − 1) / e
+## This yields two symmetric solutions ±θ_collision. We pick the first one that
+## lies in the future arc (after anomaly_start) to clip the drawn trajectory at
+## ground impact.
+##
+## Returns anomaly_end unchanged if no collision occurs (periapsis above surface,
+## circular orbit, or no valid intersection in the forward arc).
 func _get_collision_limited_anomaly_end(
 	elements: OrbitalElements,
 	anomaly_start: float,
@@ -273,6 +393,8 @@ func _get_collision_limited_anomaly_end(
 	return minf(anomaly_end, best_anomaly)
 
 
+## Normalizes a true anomaly so that it falls in the range (anomaly_start, anomaly_start + 2π].
+## Used to pick the "next" occurrence of a collision angle after the vessel's current position.
 func _normalize_anomaly_after(anomaly: float, anomaly_start: float) -> float:
 	var future_anomaly := anomaly
 	while future_anomaly <= anomaly_start + ANOMALY_EPSILON:
@@ -282,6 +404,12 @@ func _normalize_anomaly_after(anomaly: float, anomaly_start: float) -> float:
 	return future_anomaly
 
 
+## Determines whether the vessel's motion is too radial for a stable conic.
+## Decomposes velocity into radial and tangential components:
+##   v_radial    = (v · r̂) · r̂
+##   v_tangential = v − v_radial
+## If |v_tangential| < threshold, the angular momentum h = r × v is near zero
+## and the orbital plane is numerically undefined.
 func _should_draw_radial_trajectory(
 	relative_position: Vector3,
 	relative_velocity: Vector3
@@ -295,6 +423,21 @@ func _should_draw_radial_trajectory(
 	return tangential_speed <= radial_tangential_speed_threshold
 
 
+## Radial fallback: forward-predicts position using symplectic Euler integration
+## under gravity + current non-gravitational acceleration (thrust).
+##
+## This is used for near-vertical flight (launch, landing, radial escape) where
+## the two-body conic is undefined due to near-zero angular momentum. The
+## integration uses:
+##   a(t) = −μ·r̂/r² + a_thrust
+##   v(t+Δt) = v(t) + a(t)·Δt
+##   r(t+Δt) = r(t) + v(t+Δt)·Δt
+##
+## The "velocity-first" (symplectic Euler) update provides better energy
+## conservation than naive Euler for gravitational problems.
+## Reference: https://en.wikipedia.org/wiki/Semi-implicit_Euler_method
+##
+## Terminates early if the trajectory hits the primary surface.
 func _draw_radial_trajectory(
 	immediate: ImmediateMesh,
 	relative_position: Vector3,
@@ -330,6 +473,8 @@ func _draw_radial_trajectory(
 	_commit_line_strip(immediate, points)
 
 
+## Submits the computed polyline to the ImmediateMesh as a LINE_STRIP surface.
+## Skips if too few points or total arc length is below the visibility threshold.
 func _commit_line_strip(immediate: ImmediateMesh, points: PackedVector3Array) -> void:
 	if points.size() < 2:
 		return
@@ -349,6 +494,9 @@ func _get_polyline_length(points: PackedVector3Array) -> float:
 	return length
 
 
+## Computes gravitational acceleration at a position relative to the primary.
+## Uses Newton's law of gravitation: a = −μ·r̂/r² = −μ·r / r³
+## Reference: https://en.wikipedia.org/wiki/Newton%27s_law_of_universal_gravitation
 func _gravity_acceleration_at(relative_position: Vector3, mu: float) -> Vector3:
 	var distance_squared := relative_position.length_squared()
 	if distance_squared <= OrbitalElements.EPSILON * OrbitalElements.EPSILON:
@@ -358,6 +506,9 @@ func _gravity_acceleration_at(relative_position: Vector3, mu: float) -> Vector3:
 	return -relative_position * (mu / (distance_squared * distance))
 
 
+## Sums thrust from all active engines on the vessel and returns the resulting
+## non-gravitational acceleration [m/s²]. Used by the radial fallback to predict
+## powered trajectories (e.g., during launch with engines firing).
 func _current_non_gravity_acceleration() -> Vector3:
 	if body == null or not is_instance_valid(body):
 		return Vector3.ZERO
