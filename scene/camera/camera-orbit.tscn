@@ -6,7 +6,7 @@
 script = ExtResource("1_5y654")
 zoom_step = 20000.0
 zoom_responsiveness = 1200.0
-min_zoom = 40.0
+min_zoom = 16.0
 max_zoom = 40000000.0
 target_follow_responsiveness = 1000.0
 

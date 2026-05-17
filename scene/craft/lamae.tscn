@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://debbbv5vsy3y5" path="res://scene/craft/aerodynamics-model.gd" id="2_8evoc"]
 [ext_resource type="PackedScene" uid="uid://d3uw88kymxrky" path="res://scene/engine/lamae-engine.tscn" id="3_qplh4"]
 [ext_resource type="PackedScene" uid="uid://bp368ab2thy5" path="res://scene/engine/propellant-tank.tscn" id="4_5v374"]
+[ext_resource type="PackedScene" uid="uid://bqwicfd8lnc4j" path="res://scene/engine/lamae-head.tscn" id="5_qplh4"]
 [ext_resource type="Script" uid="uid://0gr43c5yvaqv" path="res://scene/selection/selectable-3d-info.gd" id="5_rd5if"]
 [ext_resource type="Script" uid="uid://rqhsv3xpp2st" path="res://scene/command/vessel-command-receiver.gd" id="6_gfec2"]
 [ext_resource type="Script" uid="uid://r13biy7i0iye" path="res://scene/selection/selectable-3d.gd" id="7_aumig"]
@@ -28,6 +29,9 @@ engine_mass = 100.0
 
 [node name="PropellantTank" parent="." unique_id=1836508573 instance=ExtResource("4_5v374")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+
+[node name="LamaeHead" parent="." unique_id=379261853 instance=ExtResource("5_qplh4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8500000000058208, 0)
 
 [node name="OrbitTrajectory" parent="." unique_id=1445164214 node_paths=PackedStringArray("body") instance=ExtResource("8_vg0m4")]
 body = NodePath("..")

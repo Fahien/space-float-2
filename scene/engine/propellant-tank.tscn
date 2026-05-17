@@ -2,8 +2,6 @@
 
 [ext_resource type="Script" uid="uid://ygm1fkptf5ru" path="res://scene/engine/propellant-model.gd" id="1_j1vl0"]
 [ext_resource type="PackedScene" uid="uid://jjffdvpiy7gj" path="res://model/rocket_fuelA.glb" id="2_cad1s"]
-[ext_resource type="PackedScene" uid="uid://ccbprocbgm4is" path="res://model/rocket_topA.glb" id="3_3kxsv"]
-[ext_resource type="PackedScene" uid="uid://b8pd5bh6hkfcq" path="res://model/rocket_sidesA.glb" id="4_i8lo6"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_7l4x7"]
 height = 0.5
@@ -16,9 +14,3 @@ propellant_mass = 90.0
 
 [node name="rocket_fuelA2" parent="." unique_id=1068781632 instance=ExtResource("2_cad1s")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.25, -1.5)
-
-[node name="rocket_topA2" parent="." unique_id=1206285904 instance=ExtResource("3_3kxsv")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.25, -1.5)
-
-[node name="rocket_sidesA2" parent="." unique_id=602357048 instance=ExtResource("4_i8lo6")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.25, -1.5)

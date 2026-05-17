@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://bqwicfd8lnc4j"]
+
+[ext_resource type="PackedScene" uid="uid://ccbprocbgm4is" path="res://model/rocket_topA.glb" id="1_um43b"]
+[ext_resource type="PackedScene" uid="uid://b8pd5bh6hkfcq" path="res://model/rocket_sidesA.glb" id="2_uxqaf"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_l6ane"]
+
+[node name="LamaeHead" type="CollisionShape3D" unique_id=379261853]
+shape = SubResource("CapsuleShape3D_l6ane")
+
+[node name="rocket_topA2" parent="." unique_id=513192185 instance=ExtResource("1_um43b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.14999999999417923, -1.5)
+
+[node name="rocket_sidesA2" parent="." unique_id=1930500118 instance=ExtResource("2_uxqaf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.8500000000058208, -1.5)
