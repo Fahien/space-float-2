@@ -9,7 +9,7 @@ func test_camera_orbit_registers_relative_floating_origin_path() -> void:
 	grid.name = "Grid"
 	root.add_child(grid)
 
-	var camera_scene := load("res://scene/test/camera_orbit.tscn") as PackedScene
+	var camera_scene := load("res://scene/camera/camera-orbit.tscn") as PackedScene
 	var camera_orbit := camera_scene.instantiate() as CameraOrbit
 	grid.add_child(camera_orbit)
 	add_child(root)

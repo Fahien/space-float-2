@@ -3,6 +3,30 @@ extends GdUnitTestSuite
 const CelestialBodySystemScript := preload("res://scene/system/celestial-body-system.gd")
 
 
+func test_atmosphere_zone_boundaries() -> void:
+	var atmosphere := AtmosphereModel.new()
+
+	assert_int(atmosphere.get_zone_at(-100.0)).is_equal(AtmosphereModel.Zone.TROPOSPHERE)
+	assert_int(atmosphere.get_zone_at(0.0)).is_equal(AtmosphereModel.Zone.TROPOSPHERE)
+	assert_int(atmosphere.get_zone_at(10999.0)).is_equal(AtmosphereModel.Zone.TROPOSPHERE)
+	assert_int(atmosphere.get_zone_at(11000.0)).is_equal(AtmosphereModel.Zone.LOWER_STRATOSPHERE)
+	assert_int(atmosphere.get_zone_at(24999.0)).is_equal(AtmosphereModel.Zone.LOWER_STRATOSPHERE)
+	assert_int(atmosphere.get_zone_at(25000.0)).is_equal(AtmosphereModel.Zone.UPPER_STRATOSPHERE)
+
+
+func test_atmosphere_temperature_pressure_and_density() -> void:
+	var atmosphere := AtmosphereModel.new()
+
+	assert_float(atmosphere.get_temperature_at(-50.0)).is_equal_approx(15.04, 0.0001)
+	assert_float(atmosphere.get_temperature_at(10000.0)).is_equal_approx(-49.86, 0.0001)
+	assert_float(atmosphere.get_temperature_at(15000.0)).is_equal_approx(-56.46, 0.0001)
+	assert_float(atmosphere.get_temperature_at(30000.0)).is_equal_approx(-41.51, 0.0001)
+
+	assert_float(atmosphere.get_pressure_at(0.0)).is_equal_approx(101.40, 0.01)
+	assert_float(atmosphere.get_density_at(0.0)).is_equal_approx(1.226, 0.001)
+	assert_float(atmosphere.get_density_at(30000.0)).is_equal_approx(0.01748, 0.0001)
+
+
 func test_celestial_body_gravity_uses_inverse_square_outside_radius() -> void:
 	var body := _body_in_tree(Vector3.ZERO, 10.0, 1000.0)
 
