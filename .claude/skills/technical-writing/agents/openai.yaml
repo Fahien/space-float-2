@@ -1,0 +1,4 @@
+interface:
+  display_name: "Technical Writing"
+  short_description: "Technical writing workflows"
+  default_prompt: "Use $technical_writing to assist with technical writing tasks."

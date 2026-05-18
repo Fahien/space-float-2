@@ -1,0 +1,4 @@
+interface:
+  display_name: "Technical History"
+  short_description: "Write, revise, or structure technical content as an accessible, authoritative, image-aware historical survey."
+  default_prompt: "Use $technical_history to create a technical-historical survey."
