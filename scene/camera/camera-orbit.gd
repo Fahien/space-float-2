@@ -27,14 +27,14 @@ extends Node3D
 const BIG_SPACE_OBSERVER_PROCESS_PRIORITY := -100
 
 @export var mouse_sensitivity := 0.01
-@export var rotation_responsiveness := 20.0
-@export var zoom_step := 2.0
-@export var zoom_responsiveness := 12.0
-@export var min_zoom := 3.0
-@export var max_zoom := 40.0
+@export var rotation_responsiveness := 20000.0
+@export var zoom_step := 20000.0
+@export var zoom_responsiveness := 1200.0
+@export var min_zoom := 16.0
+@export var max_zoom := 40000000.0
 @export var min_pitch_deg := -80.0
 @export var max_pitch_deg := 80.0
-@export var target_follow_responsiveness := 100.1
+@export var target_follow_responsiveness := 1000.0
 ## Radius of the explicit spring-arm sweep shape.
 ##
 ## Leaving `SpringArm3D.shape` unset makes Godot derive a convex pyramid from
